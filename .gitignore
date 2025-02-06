@@ -19,7 +19,8 @@
 
 # production
 /build
-
+#database
+drizzle.config.js
 # misc
 .DS_Store
 *.pem
