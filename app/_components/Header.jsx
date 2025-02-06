@@ -5,7 +5,7 @@ const Header = () => {
   const navItems = [
     { name: 'Αρχική', href: '/' },
     { name: 'Υπηρεσίες', href: '#' },
-    { name: 'Σχετικά με εμάς', href: '#' },
+    { name: 'How To', href: '#' },
   ];
 
   return (
