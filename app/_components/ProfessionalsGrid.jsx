@@ -1,7 +1,13 @@
+'use client';
+
+
 import React from 'react';
-import { Star, MapPin, Calendar, Clock } from 'lucide-react';
+import { Star, MapPin, Calendar, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
+import  { useState, useEffect } from 'react';
 
 const ProfessionalsGrid = () => {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [slidesToShow, setSlidesToShow] = useState(4);
   // Mock data for professionals
   const professionals = [
     {
@@ -115,9 +121,127 @@ const ProfessionalsGrid = () => {
   ];
 
   
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 1536) { // 2xl
+        setSlidesToShow(4);
+      } else if (window.innerWidth >= 768) { // md
+        setSlidesToShow(3);
+      } else {
+        setSlidesToShow(1);
+      }
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const nextSlide = () => {
+    setCurrentIndex((prevIndex) => 
+      prevIndex + slidesToShow >= professionals.length ? 0 : prevIndex + 1
+    );
+  };
+
+  const prevSlide = () => {
+    setCurrentIndex((prevIndex) => 
+      prevIndex <= 0 ? professionals.length - slidesToShow : prevIndex - 1
+    );
+  };
+
   return (
     <div className="min-h-screen bg-[#edecf4] px-4 py-8 mt-20">
       <div className="w-full">
+        {/* Carousel Section */}
+        <div className="mb-20">
+          <div className="text-center mb-12">
+             <h2 className="text-4xl font-bold mb-3 text-[#974dc6]">Οι Κορυφαίοι του ErgoHub</h2>
+          <p className="text-gray-600 text-lg">Γνωρίστε τους πιο αξιόπιστους επαγγελματίες με τις καλύτερες κριτικές</p>
+          </div>
+
+          <div className="relative max-w-7xl mx-auto">
+            <button 
+              onClick={prevSlide}
+              className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-6 bg-white p-2 rounded-full shadow-lg z-10 hover:bg-gray-100"
+            >
+              <ChevronLeft className="w-6 h-6 text-[#974dc6]" />
+            </button>
+
+            <div className="overflow-hidden">
+              <div 
+                className="flex transition-transform duration-300 ease-in-out gap-6"
+                style={{
+                  transform: `translateX(-${currentIndex * (100 / slidesToShow)}%)`,
+                }}
+              >
+                {professionals.slice(0, 9).map((pro) => (
+                  <div 
+                    key={pro.id}
+                    className="flex-none w-full md:w-1/3 2xl:w-1/4"
+                  >
+                    <div className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 flex flex-col h-[500px]">
+                      <div className="p-6 bg-[#dfdcf1] h-32">
+                        <div className="flex items-center space-x-4">
+                          <img
+                            src={pro.imageUrl}
+                            alt={pro.name}
+                            className="w-16 h-16 rounded-full object-cover flex-shrink-0"
+                          />
+                          <div className="min-w-0">
+                            <h3 className="font-semibold text-lg truncate">{pro.name}</h3>
+                            <p className="text-gray-600 truncate">{pro.profession}</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex-1 flex flex-col">
+                        <div className="px-6 py-4 border-b border-gray-100 h-16 flex items-center">
+                          <div className="flex items-center space-x-2">
+                            <Star className="w-5 h-5 text-yellow-400 fill-yellow-400 flex-shrink-0" />
+                            <span className="font-bold">{pro.rating}</span>
+                            <span className="text-gray-600 truncate">({pro.reviews} κριτικές)</span>
+                          </div>
+                        </div>
+
+                        <div className="px-6 py-3 flex items-center space-x-2 text-gray-600 h-12 border-b border-gray-100">
+                          <MapPin className="w-4 h-4 flex-shrink-0" />
+                          <span className="truncate">{pro.location}</span>
+                        </div>
+
+                        <div className="px-6 py-3 flex items-center space-x-2 text-green-600 h-12 border-b border-gray-100">
+                          <Clock className="w-4 h-4 flex-shrink-0" />
+                          <span className="truncate">{pro.availability}</span>
+                        </div>
+
+                        <div className="px-6 py-4 bg-gray-50 h-16 flex items-center">
+                          <div className="flex justify-between items-center w-full">
+                            <span className="text-[#974dc6] font-semibold truncate">{pro.price}</span>
+                            <span className="text-gray-600 text-sm truncate ml-2">{pro.experience}</span>
+                          </div>
+                        </div>
+
+                        <div className="p-6 mt-auto">
+                          <button className="w-full bg-[#974dc6] text-white py-2 px-4 rounded-lg hover:bg-opacity-90 transition-colors duration-300">
+                            Κράτηση
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <button 
+              onClick={nextSlide}
+              className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-6 bg-white p-2 rounded-full shadow-lg z-10 hover:bg-gray-100"
+            >
+              <ChevronRight className="w-6 h-6 text-[#974dc6]" />
+            </button>
+          </div>
+        </div>
+
+        {/* Your original grid section */}
         <div className="text-center mb-12">
           <h2 className="text-4xl font-bold mb-3 text-[#974dc6]">Οι Κορυφαίοι του ErgoHub</h2>
           <p className="text-gray-600 text-lg">Γνωρίστε τους πιο αξιόπιστους επαγγελματίες με τις καλύτερες κριτικές</p>
@@ -129,7 +253,7 @@ const ProfessionalsGrid = () => {
               key={pro.id} 
               className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 flex flex-col h-[500px]"
             >
-              {/* Header with image and basic info - Fixed height */}
+              {/* Your original card content */}
               <div className="p-6 bg-[#dfdcf1] h-32">
                 <div className="flex items-center space-x-4">
                   <img
@@ -137,16 +261,14 @@ const ProfessionalsGrid = () => {
                     alt={pro.name}
                     className="w-16 h-16 rounded-full object-cover flex-shrink-0"
                   />
-                  <div className="min-w-0"> {/* For text truncation */}
+                  <div className="min-w-0">
                     <h3 className="font-semibold text-lg truncate">{pro.name}</h3>
                     <p className="text-gray-600 truncate">{pro.profession}</p>
                   </div>
                 </div>
               </div>
 
-              {/* Content section - Fixed height */}
               <div className="flex-1 flex flex-col">
-                {/* Rating and reviews - Fixed height */}
                 <div className="px-6 py-4 border-b border-gray-100 h-16 flex items-center">
                   <div className="flex items-center space-x-2">
                     <Star className="w-5 h-5 text-yellow-400 fill-yellow-400 flex-shrink-0" />
@@ -155,19 +277,16 @@ const ProfessionalsGrid = () => {
                   </div>
                 </div>
 
-                {/* Location - Fixed height */}
                 <div className="px-6 py-3 flex items-center space-x-2 text-gray-600 h-12 border-b border-gray-100">
                   <MapPin className="w-4 h-4 flex-shrink-0" />
                   <span className="truncate">{pro.location}</span>
                 </div>
 
-                {/* Availability - Fixed height */}
                 <div className="px-6 py-3 flex items-center space-x-2 text-green-600 h-12 border-b border-gray-100">
                   <Clock className="w-4 h-4 flex-shrink-0" />
                   <span className="truncate">{pro.availability}</span>
                 </div>
 
-                {/* Price and experience - Fixed height */}
                 <div className="px-6 py-4 bg-gray-50 h-16 flex items-center">
                   <div className="flex justify-between items-center w-full">
                     <span className="text-[#974dc6] font-semibold truncate">{pro.price}</span>
@@ -175,7 +294,6 @@ const ProfessionalsGrid = () => {
                   </div>
                 </div>
 
-                {/* Button section - Fixed height */}
                 <div className="p-6 mt-auto">
                   <button className="w-full bg-[#974dc6] text-white py-2 px-4 rounded-lg hover:bg-opacity-90 transition-colors duration-300">
                     Κράτηση
