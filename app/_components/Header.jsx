@@ -5,7 +5,8 @@ import Link from 'next/link'
 const Header = () => {
   const navItems = [
     { name: 'Αρχική', href: '/' },
-    { name: 'Υπηρεσίες', href: '#' },
+    { name: 'Άρθρα & Συμβουλές', href: '/blog' },
+    { name: 'Επικοινωνία', href: '/contact' },
     { name: 'How To', href: '#' },
   ];
 
@@ -40,7 +41,7 @@ const Header = () => {
             <div className="flex items-center space-x-4">
               <Link 
                 href="/professionals"
-                className="bg-white border-2 px-4 py-2 rounded-xl text-lg font-medium transform hover:-translate-y-0.5 transition-all duration-200 shadow-sm hover:bg-blue-100 hover:shadow-md"
+                className="bg-white border-2 px-4 py-2 rounded-xl text-lg font-medium transform hover:-translate-y-0.5 transition-all duration-200 shadow-sm hover:shadow-md"
                 style={{ 
                   borderColor: '#974EC3',
                   color: '#974EC3',

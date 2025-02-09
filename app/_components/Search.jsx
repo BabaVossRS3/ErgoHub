@@ -6,13 +6,11 @@ import { Card } from '@/components/ui/card';
 import { jobCategories, searchProfessions } from '../../data/jobCategories';
 import { searchAreas, greekAreas } from '../../data/greekAreas';
 
-
-
 const normalizeGreekText = (text) => {
   return text
     .toLowerCase()
-    .normalize('NFD')  // Decompose characters into base character and diacritical marks
-    .replace(/[\u0300-\u036f]/g, '')  // Remove diacritical marks (accents/tones)
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
     .replace(/ά/g, 'α')
     .replace(/έ/g, 'ε')
     .replace(/ή/g, 'η')
@@ -31,6 +29,16 @@ const Search = () => {
   const [location, setLocation] = useState('');
   const [serviceResults, setServiceResults] = useState([]);
   const [locationResults, setLocationResults] = useState([]);
+
+  // Frequent searches data
+  const frequentSearches = [
+    { icon: '🔧', text: 'Υδραυλικός' },
+    { icon: '⚡', text: 'Ηλεκτρολόγος' },
+    { icon: '🧹', text: 'Καθαρισμός Σπιτιού' },
+    { icon: '🎨', text: 'Ελαιοχρωματιστής' },
+    { icon: '🔨', text: 'Μάστορας' },
+    { icon: '🪴', text: 'Κηπουρός' },
+  ];
 
   const getSearchSuggestions = (query) => {
     if (!query) return [];
@@ -140,7 +148,6 @@ const Search = () => {
     }
   };
 
-  // Highlight matching text in suggestions
   const highlightMatch = (text, query) => {
     if (!query) return text;
     
@@ -270,6 +277,26 @@ const Search = () => {
           Αναζήτηση
         </button>
       </form>
+
+      {/* Most Frequent Searches Section */}
+      <div className="mt-6">
+        <h3 className="text-sm font-medium text-gray-500 mb-3">Τελευταίες αναζητήσεις</h3>
+        <div className="flex flex-wrap gap-2">
+          {frequentSearches.map((item, index) => (
+            <button
+              key={index}
+              onClick={() => {
+                setService(item.text);
+                setServiceResults([]);
+              }}
+              className="flex items-center gap-2 px-4 py-2 rounded-full bg-purple-50 hover:bg-purple-100 transition-colors duration-200 text-sm text-purple-800"
+            >
+              <span>{item.icon}</span>
+              <span>{item.text}</span>
+            </button>
+          ))}
+        </div>
+      </div>
     </Card>
   );
 };

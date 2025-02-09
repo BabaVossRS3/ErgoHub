@@ -1,6 +1,6 @@
 "use client"
 import React, { useState, useEffect } from 'react';
-import { Search, MapPin, Clock, Star } from 'lucide-react';
+import { Search, MapPin, Clock, Star , Award , CheckCircle } from 'lucide-react';
 import Sidebar from '../_components/Sidebar';
 
 const ProfessionalsPage = () => {
@@ -37,7 +37,8 @@ const ProfessionalsPage = () => {
       location: "Χαλάνδρι, Αθήνα",
       availability: "Διαθέσιμη σήμερα",
       imageUrl: "./images/happy-woman-home-coronavirus-quarantine.jpg",
-      price: "από 50€",
+      is_verified: true,
+      bio: "Εξειδικευμένη παιδίατρος με έμφαση στην προληπτική ιατρική",
       experience: "15 χρόνια εμπειρίας"
     },
     {
@@ -49,7 +50,7 @@ const ProfessionalsPage = () => {
       location: "Νέα Σμύρνη, Αθήνα",
       availability: "Διαθέσιμος αύριο",
       imageUrl: "./images/handsome-young-cheerful-man-with-arms-crossed.jpg",
-      price: "από 30€",
+      bio: "Έμπειρος ηλεκτρολόγος με εξειδίκευση σε οικιακές και βιομηχανικές εγκαταστάσεις",
       experience: "10 χρόνια εμπειρίας"
     },
     {
@@ -61,7 +62,8 @@ const ProfessionalsPage = () => {
       location: "Γλυφάδα, Αθήνα",
       availability: "Διαθέσιμη σήμερα",
       imageUrl: "./images/portrait-beautiful-young-woman-standing-grey-wall.jpg",
-      price: "από 40€",
+      bio: "Ειδικευμένη φυσιοθεραπεύτρια με έμφαση στην αποκατάσταση τραυματισμών και χρόνιου πόνου" ,
+      is_verified: true,
       experience: "8 χρόνια εμπειρίας"
     },
     {
@@ -73,69 +75,81 @@ const ProfessionalsPage = () => {
       location: "Περιστέρι, Αθήνα",
       availability: "Διαθέσιμος σήμερα",
       imageUrl: "./images/pexels-olly-834863.jpg",
-      price: "από 35€",
+      bio: "Πιστοποιημένος υδραυλικός με εμπειρία σε εγκαταστάσεις, συντήρηση και επισκευές δικτύων νερού"  ,
       experience: "12 χρόνια εμπειρίας"
     },
     {
-      id: 5,
-      name: "Αναστασία Μαυροπούλου",
-      profession: "Ψυχολόγος",
-      rating: 5.0,
-      reviews: 203,
-      location: "Κηφισιά, Αθήνα",
-      availability: "Διαθέσιμη αύριο",
-      imageUrl: "./images/portrait-beautiful-young-woman-standing-grey-wall.jpg",
-      price: "από 60€",
-      experience: "13 χρόνια εμπειρίας"
-    },
-    {
-      id: 6,
-      name: "Βασίλης Αλεξάνδρου",
-      profession: "Προπονητής Personal Trainer",
-      rating: 4.9,
-      reviews: 167,
-      location: "Γλυφάδα, Αθήνα",
-      availability: "Διαθέσιμος σήμερα",
-      imageUrl: "./images/handsome-young-cheerful-man-with-arms-crossed.jpg",
-      price: "από 35€",
-      experience: "9 χρόνια εμπειρίας"
-    },
-    {
-      id: 7,
-      name: "Χριστίνα Οικονόμου",
-      profession: "Δικηγόρος",
-      rating: 4.8,
-      reviews: 142,
-      location: "Μαρούσι, Αθήνα",
-      availability: "Διαθέσιμη σήμερα",
-      imageUrl: "./images/portrait-beautiful-young-woman-standing-grey-wall.jpg",
-      price: "από 80€",
-      experience: "17 χρόνια εμπειρίας"
-    },
-    {
-      id: 8,
-      name: "Αντώνης Παπανικολάου",
-      profession: "Λογιστής",
-      rating: 4.9,
-      reviews: 178,
-      location: "Πειραιάς",
-      availability: "Διαθέσιμος αύριο",
-      imageUrl: "./images/handsome-young-cheerful-man-with-arms-crossed.jpg",
-      price: "από 45€",
-      experience: "11 χρόνια εμπειρίας"
-    },
-    {
-      id: 9,
-      name: "Σοφία Καραγιάννη",
-      profession: "Διατροφολόγος",
-      rating: 4.7,
-      reviews: 134,
-      location: "Νέα Σμύρνη, Αθήνα",
-      availability: "Διαθέσιμη σήμερα",
-      imageUrl: "./images/portrait-beautiful-young-woman-standing-grey-wall.jpg",
-      price: "από 40€",
-      experience: "7 χρόνια εμπειρίας"
-    }
+        id: 5,
+        name: "Αναστασία Μαυροπούλου",
+        profession: "Ψυχολόγος",
+        rating: 5.0,
+        reviews: 203,
+        location: "Κηφισιά, Αθήνα",
+        availability: "Διαθέσιμη αύριο",
+        imageUrl: "./images/portrait-beautiful-young-woman-standing-grey-wall.jpg",
+        bio: "Ψυχολόγος με εξειδίκευση στη γνωσιακή-συμπεριφορική θεραπεία και τη διαχείριση άγχους"  ,
+        experience: "13 χρόνια εμπειρίας"
+      },
+      {
+        id: 6,
+        name: "Βασίλης Αλεξάνδρου",
+        profession: "Προπονητής Personal Trainer",
+        rating: 4.9,
+        reviews: 167,
+        location: "Γλυφάδα, Αθήνα",
+        availability: "Διαθέσιμος σήμερα",
+        imageUrl: "./images/handsome-young-cheerful-man-with-arms-crossed.jpg",
+        bio: "Έμπειρος προπονητής με εξειδίκευση στη βελτίωση της φυσικής κατάστασης και αθλητικών επιδόσεων"  ,
+        is_verified: true,
+        experience: "9 χρόνια εμπειρίας"
+      },
+      {
+        id: 7,
+        name: "Χριστίνα Οικονόμου",
+        profession: "Δικηγόρος",
+        rating: 4.8,
+        reviews: 142,
+        location: "Μαρούσι, Αθήνα",
+        availability: "Διαθέσιμη σήμερα",
+        imageUrl: "./images/portrait-beautiful-young-woman-standing-grey-wall.jpg",
+        bio: "Προσωπικός γυμναστής με έμφαση στη λειτουργική προπόνηση και την εξατομικευμένη άσκηση"  ,
+        experience: "17 χρόνια εμπειρίας"
+      },
+      {
+        id: 8,
+        name: "Αντώνης Παπανικολάου",
+        profession: "Λογιστής",
+        rating: 4.9,
+        reviews: 178,
+        location: "Πειραιάς",
+        availability: "Διαθέσιμος αύριο",
+        imageUrl: "./images/handsome-young-cheerful-man-with-arms-crossed.jpg",
+        bio: "Έμπειρος λογιστής με εξειδίκευση στη φορολογική συμμόρφωση και τη χρηματοοικονομική ανάλυση"  ,
+        experience: "11 χρόνια εμπειρίας"
+      },
+      {
+        id: 9,
+        name: "Σοφία Καραγιάννη",
+        profession: "Διατροφολόγος",
+        rating: 4.7,
+        reviews: 134,
+        location: "Νέα Σμύρνη, Αθήνα",
+        availability: "Διαθέσιμη σήμερα",
+        imageUrl: "./images/portrait-beautiful-young-woman-standing-grey-wall.jpg",
+        bio: "Διατροφολόγος με έμφαση στη δημιουργία εξατομικευμένων διατροφικών προγραμμάτων"  ,
+        experience: "7 χρόνια εμπειρίας"
+      }
+  ];
+
+  const frequentSearches = [
+    { icon: '🔧', text: 'Υδραυλικός' },
+    { icon: '⚡', text: 'Ηλεκτρολόγος' },
+    { icon: '🧹', text: 'Καθαρισμός Σπιτιού' },
+    { icon: '🎨', text: 'Ελαιοχρωματιστής' },
+    { icon: '🔨', text: 'Μάστορας' },
+    { icon: '🪴', text: 'Κηπουρός' },
+    { icon: '👩‍⚕️', text: 'Παιδίατρος' },
+    { icon: '💪', text: 'Personal Trainer' }
   ];
 
   const [filteredPros, setFilteredPros] = useState(professionals);
@@ -208,55 +222,60 @@ const ProfessionalsPage = () => {
     setFilteredPros(result);
   }, [filters]);
   const renderProfessionalCard = (pro) => (
-    <div 
-      key={pro.id}
-      className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 flex flex-col h-[500px]"
-    >
-      <div className="p-6 bg-[#dfdcf1] h-32">
+    <div className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 flex flex-col h-[520px] relative group">
+      <div className="p-6 bg-[#dfdcf1] h-36">
         <div className="flex items-center space-x-4">
-          <img
-            src={pro.imageUrl}
-            alt={pro.name}
-            className="w-16 h-16 rounded-full object-cover flex-shrink-0"
-          />
+          <div className="relative">
+            <img
+              src={pro.imageUrl}
+              alt={pro.name}
+              className="w-20 h-20 rounded-full object-cover flex-shrink-0 border-4 border-white shadow-lg group-hover:scale-105 transition-transform duration-300"
+            />
+            {pro.is_verified && (
+              <CheckCircle className="absolute -bottom-1 -right-1 w-6 h-6 text-green-500 bg-white rounded-full" />
+            )}
+          </div>
           <div className="min-w-0">
-            <h3 className="font-semibold text-lg truncate">{pro.name}</h3>
+            <h3 className="font-bold text-xl text-gray-800 truncate group-hover:text-gray-900">{pro.name}</h3>
             <p className="text-gray-600 truncate">{pro.profession}</p>
           </div>
         </div>
       </div>
 
-      <div className="flex-1 flex flex-col">
-        <div className="px-6 py-4 border-b border-gray-100 h-16 flex items-center">
-          <div className="flex items-center space-x-2">
-            <Star className="w-5 h-5 text-yellow-400 fill-yellow-400 flex-shrink-0" />
-            <span className="font-bold">{pro.rating}</span>
-            <span className="text-gray-600 truncate">({pro.reviews} κριτικές)</span>
-          </div>
+      <div className="flex-1 flex flex-col p-6 space-y-4">
+        <div className="flex items-center space-x-2">
+          <Star className="w-5 h-5 text-yellow-400 fill-yellow-400 flex-shrink-0" />
+          <span className="font-bold">{pro.rating}</span>
+          <span className="text-gray-600 truncate">({pro.reviews} κριτικές)</span>
         </div>
 
-        <div className="px-6 py-3 flex items-center space-x-2 text-gray-600 h-12 border-b border-gray-100">
+        <div className="flex items-center space-x-2 text-gray-600">
           <MapPin className="w-4 h-4 flex-shrink-0" />
           <span className="truncate">{pro.location}</span>
         </div>
 
-        <div className="px-6 py-3 flex items-center space-x-2 text-green-600 h-12 border-b border-gray-100">
+        <div className="flex items-center space-x-2 text-green-600">
           <Clock className="w-4 h-4 flex-shrink-0" />
           <span className="truncate">{pro.availability}</span>
         </div>
 
-        <div className="px-6 py-4 bg-gray-50 h-16 flex items-center">
-          <div className="flex justify-between items-center w-full">
-            <span className="text-[#974dc6] font-semibold truncate">{pro.price}</span>
-            <span className="text-gray-600 text-sm truncate ml-2">{pro.experience}</span>
-          </div>
+        <div className="flex items-center space-x-2 text-gray-600">
+          <Award className="w-4 h-4 flex-shrink-0" />
+          <span className="truncate">{pro.experience}</span>
         </div>
 
-        <div className="p-6 mt-auto">
-          <button className="w-full bg-[#974dc6] text-white py-2 px-4 rounded-lg hover:bg-opacity-90 transition-colors duration-300">
-            Κράτηση
-          </button>
+        <div className="bg-gray-50 rounded-lg p-4 mt-2">
+          <p className="text-gray-600 text-sm line-clamp-2">{pro.bio || 'Επαγγελματίας στο ErgoHub'}</p>
         </div>
+      </div>
+
+      <div className="p-6 mt-auto flex gap-4">
+        <button className="w-full bg-transparent border-2 border-[#974dc6]  text-[#974dc6] py-3 px-4 rounded-lg hover:bg-opacity-90 transition-colors duration-300 font-semibold shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
+          Προφίλ
+        </button>
+        <button className="w-full bg-[#974dc6] text-white py-3 px-4 rounded-lg hover:bg-opacity-90 transition-colors duration-300 font-semibold shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
+          Ραντεβού
+        </button>
       </div>
     </div>
   );
@@ -271,15 +290,50 @@ const ProfessionalsPage = () => {
             <div className="bg-white rounded-lg shadow-md p-6">
               {/* Search Bar */}
               <div className="relative mb-6">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Αναζήτηση επαγγελματία ή υπηρεσίας..."
-                  value={filters.search}
-                  onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#974dc6]"
-                />
-              </div>
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Αναζήτηση επαγγελματία ή υπηρεσίας..."
+                    value={filters.search}
+                    onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
+                    className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#974dc6]"
+                  />
+                  {filters.search && (
+                    <button
+                      onClick={() => setFilters(prev => ({ ...prev, search: '' }))}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors duration-200"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    </button>
+                  )}
+                </div>
+                  {/* Most Frequent Searches */}
+                  <div className="mb-6">
+                  <h3 className="text-sm font-medium text-gray-500 mb-3">Τελευταίες αναζητήσεις</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {frequentSearches.map((item, index) => (
+                      <button
+                        key={index}
+                        onClick={() => setFilters(prev => ({ ...prev, search: item.text }))}
+                        className="flex items-center gap-2 px-4 py-2 rounded-full bg-purple-50 hover:bg-purple-100 transition-colors duration-200 text-sm text-purple-800"
+                      >
+                        <span>{item.icon}</span>
+                        <span>{item.text}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
 
               {/* Filter Controls */}
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -289,7 +343,7 @@ const ProfessionalsPage = () => {
           </div>
 
           {/* Results Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
             {filteredPros.map(renderProfessionalCard)}
           </div>
         </div>

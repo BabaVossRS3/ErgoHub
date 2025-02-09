@@ -2,8 +2,15 @@
 
 
 import React from 'react';
-import { Star, MapPin, Calendar, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Star, MapPin, Clock, ChevronLeft, ChevronRight, CheckCircle, Award } from 'lucide-react';
 import  { useState, useEffect } from 'react';
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
 
 const ProfessionalsGrid = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -22,7 +29,8 @@ const ProfessionalsGrid = () => {
       location: "Χαλάνδρι, Αθήνα",
       availability: "Διαθέσιμη σήμερα",
       imageUrl: "./images/happy-woman-home-coronavirus-quarantine.jpg",
-      price: "από 50€",
+      is_verified: true,
+      bio: "Εξειδικευμένη παιδίατρος με έμφαση στην προληπτική ιατρική",
       experience: "15 χρόνια εμπειρίας"
     },
     {
@@ -34,7 +42,7 @@ const ProfessionalsGrid = () => {
       location: "Νέα Σμύρνη, Αθήνα",
       availability: "Διαθέσιμος αύριο",
       imageUrl: "./images/handsome-young-cheerful-man-with-arms-crossed.jpg",
-      price: "από 30€",
+      bio: "Έμπειρος ηλεκτρολόγος με εξειδίκευση σε οικιακές και βιομηχανικές εγκαταστάσεις",
       experience: "10 χρόνια εμπειρίας"
     },
     {
@@ -46,7 +54,8 @@ const ProfessionalsGrid = () => {
       location: "Γλυφάδα, Αθήνα",
       availability: "Διαθέσιμη σήμερα",
       imageUrl: "./images/portrait-beautiful-young-woman-standing-grey-wall.jpg",
-      price: "από 40€",
+      bio: "Ειδικευμένη φυσιοθεραπεύτρια με έμφαση στην αποκατάσταση τραυματισμών και χρόνιου πόνου" ,
+      is_verified: true,
       experience: "8 χρόνια εμπειρίας"
     },
     {
@@ -58,7 +67,7 @@ const ProfessionalsGrid = () => {
       location: "Περιστέρι, Αθήνα",
       availability: "Διαθέσιμος σήμερα",
       imageUrl: "./images/pexels-olly-834863.jpg",
-      price: "από 35€",
+      bio: "Πιστοποιημένος υδραυλικός με εμπειρία σε εγκαταστάσεις, συντήρηση και επισκευές δικτύων νερού"  ,
       experience: "12 χρόνια εμπειρίας"
     },
     {
@@ -70,7 +79,7 @@ const ProfessionalsGrid = () => {
         location: "Κηφισιά, Αθήνα",
         availability: "Διαθέσιμη αύριο",
         imageUrl: "./images/portrait-beautiful-young-woman-standing-grey-wall.jpg",
-        price: "από 60€",
+        bio: "Ψυχολόγος με εξειδίκευση στη γνωσιακή-συμπεριφορική θεραπεία και τη διαχείριση άγχους"  ,
         experience: "13 χρόνια εμπειρίας"
       },
       {
@@ -82,7 +91,8 @@ const ProfessionalsGrid = () => {
         location: "Γλυφάδα, Αθήνα",
         availability: "Διαθέσιμος σήμερα",
         imageUrl: "./images/handsome-young-cheerful-man-with-arms-crossed.jpg",
-        price: "από 35€",
+        bio: "Έμπειρος προπονητής με εξειδίκευση στη βελτίωση της φυσικής κατάστασης και αθλητικών επιδόσεων"  ,
+        is_verified: true,
         experience: "9 χρόνια εμπειρίας"
       },
       {
@@ -94,7 +104,7 @@ const ProfessionalsGrid = () => {
         location: "Μαρούσι, Αθήνα",
         availability: "Διαθέσιμη σήμερα",
         imageUrl: "./images/portrait-beautiful-young-woman-standing-grey-wall.jpg",
-        price: "από 80€",
+        bio: "Προσωπικός γυμναστής με έμφαση στη λειτουργική προπόνηση και την εξατομικευμένη άσκηση"  ,
         experience: "17 χρόνια εμπειρίας"
       },
       {
@@ -106,7 +116,7 @@ const ProfessionalsGrid = () => {
         location: "Πειραιάς",
         availability: "Διαθέσιμος αύριο",
         imageUrl: "./images/handsome-young-cheerful-man-with-arms-crossed.jpg",
-        price: "από 45€",
+        bio: "Έμπειρος λογιστής με εξειδίκευση στη φορολογική συμμόρφωση και τη χρηματοοικονομική ανάλυση"  ,
         experience: "11 χρόνια εμπειρίας"
       },
       {
@@ -118,7 +128,7 @@ const ProfessionalsGrid = () => {
         location: "Νέα Σμύρνη, Αθήνα",
         availability: "Διαθέσιμη σήμερα",
         imageUrl: "./images/portrait-beautiful-young-woman-standing-grey-wall.jpg",
-        price: "από 40€",
+        bio: "Διατροφολόγος με έμφαση στη δημιουργία εξατομικευμένων διατροφικών προγραμμάτων"  ,
         experience: "7 χρόνια εμπειρίας"
       }
   ];
@@ -128,176 +138,117 @@ const ProfessionalsGrid = () => {
     pro.availability.toLowerCase().includes('σήμερα')
   );
 
-  useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth >= 1536) {
-        setSlidesToShow(4);
-      } else if (window.innerWidth >= 768) {
-        setSlidesToShow(3);
-      } else {
-        setSlidesToShow(1);
-      }
-    };
-
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  const nextCarouselSlide = () => {
-    setCarouselIndex((prevIndex) => {
-      const maxIndex = professionals.length - slidesToShow;
-      return prevIndex >= maxIndex ? 0 : prevIndex + 1;
-    });
-  };
-
-  const prevCarouselSlide = () => {
-    setCarouselIndex((prevIndex) => {
-      const maxIndex = professionals.length - slidesToShow;
-      return prevIndex <= 0 ? maxIndex : prevIndex - 1;
-    });
-  };
-
-  const nextGridSlide = () => {
-    setGridIndex((prevIndex) => {
-      const maxIndex = availableToday.length - slidesToShow;
-      return prevIndex >= maxIndex ? 0 : prevIndex + 1;
-    });
-  };
-
-  const prevGridSlide = () => {
-    setGridIndex((prevIndex) => {
-      const maxIndex = availableToday.length - slidesToShow;
-      return prevIndex <= 0 ? maxIndex : prevIndex - 1;
-    });
-  };
-
-  const renderProfessionalCard = (pro) => (
-    <div 
-      key={pro.id}
-      className="flex-none w-full md:w-1/3 2xl:w-1/4"
-    >
-      <div className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 flex flex-col h-[500px]">
-        <div className="p-6 bg-[#dfdcf1] h-32">
-          <div className="flex items-center space-x-4">
+  const ProfessionalCard = ({ pro }) => (
+    <div className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 flex flex-col h-[520px] relative group">
+      <div className="p-6 bg-[#dfdcf1] h-36">
+        <div className="flex items-center space-x-4">
+          <div className="relative">
             <img
               src={pro.imageUrl}
               alt={pro.name}
-              className="w-16 h-16 rounded-full object-cover flex-shrink-0"
+              className="w-20 h-20 rounded-full object-cover flex-shrink-0 border-4 border-white shadow-lg group-hover:scale-105 transition-transform duration-300"
             />
-            <div className="min-w-0">
-              <h3 className="font-semibold text-lg truncate">{pro.name}</h3>
-              <p className="text-gray-600 truncate">{pro.profession}</p>
-            </div>
+            {pro.is_verified && (
+              <CheckCircle className="absolute -bottom-1 -right-1 w-6 h-6 text-green-500 bg-white rounded-full" />
+            )}
+          </div>
+          <div className="min-w-0">
+            <h3 className="font-bold text-xl text-gray-800 truncate group-hover:text-gray-900">{pro.name}</h3>
+            <p className="text-gray-600 truncate">{pro.profession}</p>
           </div>
         </div>
+      </div>
 
-        <div className="flex-1 flex flex-col">
-          <div className="px-6 py-4 border-b border-gray-100 h-16 flex items-center">
-            <div className="flex items-center space-x-2">
-              <Star className="w-5 h-5 text-yellow-400 fill-yellow-400 flex-shrink-0" />
-              <span className="font-bold">{pro.rating}</span>
-              <span className="text-gray-600 truncate">({pro.reviews} κριτικές)</span>
-            </div>
-          </div>
-
-          <div className="px-6 py-3 flex items-center space-x-2 text-gray-600 h-12 border-b border-gray-100">
-            <MapPin className="w-4 h-4 flex-shrink-0" />
-            <span className="truncate">{pro.location}</span>
-          </div>
-
-          <div className="px-6 py-3 flex items-center space-x-2 text-green-600 h-12 border-b border-gray-100">
-            <Clock className="w-4 h-4 flex-shrink-0" />
-            <span className="truncate">{pro.availability}</span>
-          </div>
-
-          <div className="px-6 py-4 bg-gray-50 h-16 flex items-center">
-            <div className="flex justify-between items-center w-full">
-              <span className="text-[#974dc6] font-semibold truncate">{pro.price}</span>
-              <span className="text-gray-600 text-sm truncate ml-2">{pro.experience}</span>
-            </div>
-          </div>
-
-          <div className="p-6 mt-auto">
-            <button className="w-full bg-[#974dc6] text-white py-2 px-4 rounded-lg hover:bg-opacity-90 transition-colors duration-300">
-              Κράτηση
-            </button>
-          </div>
+      <div className="flex-1 flex flex-col p-6 space-y-4">
+        <div className="flex items-center space-x-2">
+          <Star className="w-5 h-5 text-yellow-400 fill-yellow-400 flex-shrink-0" />
+          <span className="font-bold">{pro.rating}</span>
+          <span className="text-gray-600 truncate">({pro.reviews} κριτικές)</span>
         </div>
+
+        <div className="flex items-center space-x-2 text-gray-600">
+          <MapPin className="w-4 h-4 flex-shrink-0" />
+          <span className="truncate">{pro.location}</span>
+        </div>
+
+        <div className="flex items-center space-x-2 text-green-600">
+          <Clock className="w-4 h-4 flex-shrink-0" />
+          <span className="truncate">{pro.availability}</span>
+        </div>
+
+        <div className="flex items-center space-x-2 text-gray-600">
+          <Award className="w-4 h-4 flex-shrink-0" />
+          <span className="truncate">{pro.experience}</span>
+        </div>
+
+        <div className="bg-gray-50 rounded-lg p-4 mt-2">
+          <p className="text-gray-600 text-sm line-clamp-2">{pro.bio}</p>
+        </div>
+      </div>
+
+      <div className="p-6 mt-auto flex gap-4">
+        <button className="w-full bg-transparent border-2 border-[#974dc6]  text-[#974dc6] py-3 px-4 rounded-lg hover:bg-opacity-90 transition-colors duration-300 font-semibold shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
+          Προφίλ
+        </button>
+        <button className="w-full bg-[#974dc6] text-white py-3 px-4 rounded-lg hover:bg-opacity-90 transition-colors duration-300 font-semibold shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
+          Ραντεβού
+        </button>
       </div>
     </div>
   );
 
   return (
     <div className="min-h-screen bg-[#edecf4] px-4 py-8 mt-20">
-      <div className="w-full">
-        {/* First Carousel Section */}
+      <div className="max-w-[1600px] mx-auto">
+        {/* Top Professionals Section */}
         <div className="mb-20">
           <div className="text-center mb-12">
             <h2 className="text-4xl font-bold mb-3 text-[#974dc6]">Οι Κορυφαίοι του ErgoHub</h2>
             <p className="text-gray-600 text-lg">Γνωρίστε τους πιο αξιόπιστους επαγγελματίες με τις καλύτερες κριτικές</p>
           </div>
 
-          <div className="relative max-w-7xl mx-auto">
-            <button 
-              onClick={prevCarouselSlide}
-              className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-6 bg-white p-2 rounded-full shadow-lg z-10 hover:bg-gray-100"
-            >
-              <ChevronLeft className="w-6 h-6 text-[#974dc6]" />
-            </button>
-
-            <div className="overflow-hidden">
-              <div 
-                className="flex transition-transform duration-300 ease-in-out gap-6"
-                style={{
-                  transform: `translateX(-${carouselIndex * (100 / slidesToShow)}%)`,
-                }}
-              >
-                {professionals.map(renderProfessionalCard)}
-              </div>
-            </div>
-
-            <button 
-              onClick={nextCarouselSlide}
-              className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-6 bg-white p-2 rounded-full shadow-lg z-10 hover:bg-gray-100"
-            >
-              <ChevronRight className="w-6 h-6 text-[#974dc6]" />
-            </button>
-          </div>
+          <Carousel
+            opts={{
+              align: "start",
+              loop: true,
+            }}
+            className="w-full"
+          >
+            <CarouselContent className="-ml-4">
+              {professionals.map((pro) => (
+                <CarouselItem key={pro.id} className="pl-4 md:basis-1/2 lg:basis-1/3 xl:basis-1/4">
+                  <ProfessionalCard pro={pro} />
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious />
+            <CarouselNext />
+          </Carousel>
         </div>
 
-        {/* Second Carousel Section (Available Today) */}
+        {/* Available Today Section */}
         <div className="text-center mb-12">
           <h2 className="text-4xl font-bold mb-3 text-[#974dc6]">Διαθέσιμοι Σήμερα</h2>
-          <p className="text-gray-600 text-lg">Ανακαλύψτε όλους τους επαγγελματίες που είναι διαθέσιμοι στην πλατφόρμα μας</p>
+          <p className="text-gray-600 text-lg">Ανακαλύψτε όλους τους επαγγελματίες που είναι διαθέσιμοι σήμερα στο ErgoHub</p>
         </div>
 
-        <div className="relative max-w-7xl mx-auto">
-          <button 
-            onClick={prevGridSlide}
-            className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-6 bg-white p-2 rounded-full shadow-lg z-10 hover:bg-gray-100"
-          >
-            <ChevronLeft className="w-6 h-6 text-[#974dc6]" />
-          </button>
-
-          <div className="overflow-hidden">
-            <div 
-              className="flex transition-transform duration-300 ease-in-out gap-6"
-              style={{
-                transform: `translateX(-${gridIndex * (100 / slidesToShow)}%)`,
-              }}
-            >
-              {availableToday.map(renderProfessionalCard)}
-            </div>
-          </div>
-
-          <button 
-            onClick={nextGridSlide}
-            className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-6 bg-white p-2 rounded-full shadow-lg z-10 hover:bg-gray-100"
-          >
-            <ChevronRight className="w-6 h-6 text-[#974dc6]" />
-          </button>
-        </div>
+        <Carousel
+          opts={{
+            align: "start",
+            loop: true,
+          }}
+          className="w-full"
+        >
+          <CarouselContent className="-ml-4">
+            {availableToday.map((pro) => (
+              <CarouselItem key={pro.id} className="pl-4 md:basis-1/2 lg:basis-1/3 xl:basis-1/4">
+                <ProfessionalCard pro={pro} />
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          <CarouselPrevious />
+          <CarouselNext />
+        </Carousel>
       </div>
     </div>
   );
