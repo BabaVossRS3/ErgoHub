@@ -199,9 +199,9 @@ const ProfessionalsGrid = () => {
 
   return (
     <div className="min-h-screen bg-[#edecf4] px-4 py-8 mt-20">
-      <div className="max-w-[1600px] mx-auto">
+      <div className="mx-auto">
         {/* Top Professionals Section */}
-        <div className="mb-20">
+        <div className="mb-20 flex flex-col items-center">
           <div className="text-center mb-12">
             <h2 className="text-4xl font-bold mb-3 text-[#974dc6]">Οι Κορυφαίοι του ErgoHub</h2>
             <p className="text-gray-600 text-lg">Γνωρίστε τους πιο αξιόπιστους επαγγελματίες με τις καλύτερες κριτικές</p>
@@ -212,7 +212,7 @@ const ProfessionalsGrid = () => {
               align: "start",
               loop: true,
             }}
-            className="w-full"
+            className="w-[90%]"
           >
             <CarouselContent className="-ml-4">
               {professionals.map((pro) => (
@@ -227,28 +227,31 @@ const ProfessionalsGrid = () => {
         </div>
 
         {/* Available Today Section */}
-        <div className="text-center mb-12">
-          <h2 className="text-4xl font-bold mb-3 text-[#974dc6]">Διαθέσιμοι Σήμερα</h2>
-          <p className="text-gray-600 text-lg">Ανακαλύψτε όλους τους επαγγελματίες που είναι διαθέσιμοι σήμερα στο ErgoHub</p>
-        </div>
+        <div className="flex flex-col items-center">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-bold mb-3 text-[#974dc6]">Διαθέσιμοι Σήμερα</h2>
+            <p className="text-gray-600 text-lg">Ανακαλύψτε όλους τους επαγγελματίες που είναι διαθέσιμοι σήμερα στο ErgoHub</p>
+          </div>
 
-        <Carousel
-          opts={{
-            align: "start",
-            loop: true,
-          }}
-          className="w-full"
-        >
-          <CarouselContent className="-ml-4">
-            {availableToday.map((pro) => (
-              <CarouselItem key={pro.id} className="pl-4 md:basis-1/2 lg:basis-1/3 xl:basis-1/4">
-                <ProfessionalCard pro={pro} />
-              </CarouselItem>
-            ))}
-          </CarouselContent>
-          <CarouselPrevious />
-          <CarouselNext />
-        </Carousel>
+          <Carousel
+            opts={{
+              align: "start",
+              loop: true,
+            }}
+            className="w-[90%]"
+          >
+            <CarouselContent className="-ml-4">
+              {availableToday.map((pro) => (
+                <CarouselItem key={pro.id} className="pl-4 md:basis-1/2 lg:basis-1/3 xl:basis-1/4">
+                  <ProfessionalCard pro={pro} />
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious />
+            <CarouselNext />
+          </Carousel>
+        </div>
+        
       </div>
     </div>
   );

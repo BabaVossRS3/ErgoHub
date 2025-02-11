@@ -1,12 +1,7 @@
-"use client"
-
-import React, { useState } from 'react';
-import { Search as SearchIcon, MapPin, ChevronDown } from 'lucide-react';
-import { Card } from '@/components/ui/card';
+import React, { useState, useEffect } from 'react';
+import { Search, MapPin, Clock, Star, Award, CheckCircle } from 'lucide-react';
 import { jobCategories, searchProfessions } from '../../data/jobCategories';
 import { searchAreas, greekAreas } from '../../data/greekAreas';
-import { useRouter } from 'next/navigation';
-
 
 const normalizeGreekText = (text) => {
   return text
@@ -26,24 +21,11 @@ const normalizeGreekText = (text) => {
     .replace(/ώ/g, 'ω');
 };
 
-const Search = () => {
-  const [service, setService] = useState('');
-  const [location, setLocation] = useState('');
+const SearchSection = ({ filters, setFilters, frequentSearches }) => {
   const [serviceResults, setServiceResults] = useState([]);
   const [locationResults, setLocationResults] = useState([]);
-  const router = useRouter();
 
-
-  // Frequent searches data
-  const frequentSearches = [
-    { icon: '🔧', text: 'Υδραυλικός' },
-    { icon: '⚡', text: 'Ηλεκτρολόγος' },
-    { icon: '🧹', text: 'Καθαρισμός Σπιτιού' },
-    { icon: '🎨', text: 'Ελαιοχρωματιστής' },
-    { icon: '🔨', text: 'Μάστορας' },
-    { icon: '🪴', text: 'Κηπουρός' },
-  ];
-
+  // Reuse the existing search suggestion functions from Search.jsx
   const getSearchSuggestions = (query) => {
     if (!query) return [];
     
@@ -130,7 +112,7 @@ const Search = () => {
 
   const handleServiceChange = (e) => {
     const value = e.target.value;
-    setService(value);
+    setFilters(prev => ({ ...prev, search: value }));
     
     if (value.length > 1) {
       const results = getSearchSuggestions(value);
@@ -142,7 +124,7 @@ const Search = () => {
 
   const handleLocationChange = (e) => {
     const value = e.target.value;
-    setLocation(value);
+    setFilters(prev => ({ ...prev, areaSearch: value }));
     
     if (value.length > 1) {
       const results = getLocationSuggestions(value);
@@ -200,34 +182,33 @@ const Search = () => {
     );
   };
 
-  const handleSearch = (e) => {
-    e.preventDefault();
-    
-    // Build the query parameters
-    const params = new URLSearchParams();
-    if (service) params.append('search', service);
-    if (location) params.append('location', location);
-    
-    // Navigate to professionals page with filters
-    router.push(`/professionals?${params.toString()}`);
-  };
-
   return (
-    <Card className="p-6 shadow-lg bg-white backdrop-blur-sm mt-20">
-      <form onSubmit={handleSearch} className="flex flex-col md:flex-row gap-4">
-        {/* Service Input */}
+    <div className="bg-white rounded-lg shadow-md p-6 mb-10">
+      {/* Search Bars Container */}
+      <div className="flex flex-col md:flex-row gap-4 mb-6">
+        {/* Profession Search */}
         <div className="flex-1 relative">
-          <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-            <SearchIcon className="h-5 w-5" style={{ color: '#974EC3' }} />
-          </div>
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
           <input
             type="text"
-            value={service}
+            placeholder="Αναζήτηση επαγγελματία ή υπηρεσίας..."
+            value={filters.search}
             onChange={handleServiceChange}
-            placeholder="Αναζήτηση υπηρεσίας..."
-            className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-purple-200"
-            style={{ borderColor: 'rgba(151, 78, 195, 0.2)' }}
+            className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#974dc6]"
           />
+          {filters.search && (
+            <button
+              onClick={() => {
+                setFilters(prev => ({ ...prev, search: '' }));
+                setServiceResults([]);
+              }}
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+            </button>
+          )}
           
           {serviceResults.length > 0 && (
             <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
@@ -236,31 +217,41 @@ const Search = () => {
                   key={index}
                   className="p-2 hover:bg-purple-50 cursor-pointer"
                   onClick={() => {
-                    setService(result.text);
+                    setFilters(prev => ({ ...prev, search: result.text }));
                     setServiceResults([]);
                   }}
                 >
-                  {renderSuggestion(result, service)}
+                  {renderSuggestion(result, filters.search)}
                 </div>
               ))}
             </div>
           )}
         </div>
 
-        {/* Location Input */}
+        {/* Area Search */}
         <div className="flex-1 relative">
-          <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-            <MapPin className="h-5 w-5" style={{ color: '#974EC3' }} />
-          </div>
+          <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
           <input
             type="text"
-            value={location}
+            placeholder="Αναζήτηση περιοχής..."
+            value={filters.areaSearch}
             onChange={handleLocationChange}
-            placeholder="Τοποθεσία..."
-            className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-purple-200"
-            style={{ borderColor: 'rgba(151, 78, 195, 0.2)' }}
+            className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#974dc6]"
           />
-
+          {filters.areaSearch && (
+            <button
+              onClick={() => {
+                setFilters(prev => ({ ...prev, areaSearch: '' }));
+                setLocationResults([]);
+              }}
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+            </button>
+          )}
+          
           {locationResults.length > 0 && (
             <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
               {locationResults.map((result, index) => (
@@ -268,36 +259,49 @@ const Search = () => {
                   key={index}
                   className="p-2 hover:bg-purple-50 cursor-pointer"
                   onClick={() => {
-                    setLocation(result.text);
+                    setFilters(prev => ({ ...prev, areaSearch: result.text }));
                     setLocationResults([]);
                   }}
                 >
-                  {renderSuggestion(result, location)}
+                  {renderSuggestion(result, filters.areaSearch)}
                 </div>
               ))}
             </div>
           )}
         </div>
+      </div>
 
-        {/* Search Button */}
-        <button
-          type="submit"
-          className="px-8 py-3 rounded-lg text-white font-medium transition-all duration-200 hover:opacity-90 hover:shadow-md"
-          style={{ backgroundColor: '#974EC3' }}
-        >
-          Αναζήτηση
-        </button>
-      </form>
-
-      {/* Most Frequent Searches Section */}
-      <div className="mt-6">
-        <h3 className="text-sm font-medium text-gray-500 mb-3">Τελευταίες αναζητήσεις</h3>
+        {/* Most Frequent Searches and Filters */}
+        <div className="mb-6">
+        <div className="flex justify-between items-center mb-3">
+          <h3 className="text-sm font-medium text-gray-500">Τελευταίες αναζητήσεις</h3>
+          <div className="flex items-center gap-2">
+          <div className="flex flex-col pr-5">
+                <div className="flex pb-2 items-center gap-2">
+                    <h2>Ταξινόμηση με</h2>
+                    <Star className="w-4 h-4 text-yellow-400" />
+                </div>
+                 <select
+                    value={filters.sortBy || 'reviewCount'}
+                    onChange={(e) => setFilters(prev => ({ ...prev, sortBy: e.target.value }))}
+                    className="text-sm border border-gray-300 rounded-sm py-1 px-2 focus:outline-none focus:ring-2 focus:ring-[#974dc6] bg-white"
+                >
+                    <option value="reviewCount">Περισσότερες κριτικές</option>
+                    <option value="highestRating">Υψηλότερη βαθμολογία</option>
+                    <option value="lowestRating">Χαμηλότερη βαθμολογία</option>
+                    <option value="newest">Νεότεροι επαγγελματίες</option>
+                </select>
+            </div>
+            
+            
+          </div>
+        </div>
         <div className="flex flex-wrap gap-2">
           {frequentSearches.slice(0,4).map((item, index) => (
             <button
               key={index}
               onClick={() => {
-                setService(item.text);
+                setFilters(prev => ({ ...prev, search: item.text }));
                 setServiceResults([]);
               }}
               className="flex items-center gap-2 px-4 py-2 rounded-full bg-purple-50 hover:bg-purple-100 transition-colors duration-200 text-sm text-purple-800"
@@ -308,9 +312,8 @@ const Search = () => {
           ))}
         </div>
       </div>
-      
-    </Card>
+    </div>
   );
 };
 
-export default Search;
+export default SearchSection;

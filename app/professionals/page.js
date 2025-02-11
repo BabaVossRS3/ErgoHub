@@ -2,10 +2,17 @@
 import React, { useState, useEffect } from 'react';
 import { Search, MapPin, Clock, Star , Award , CheckCircle } from 'lucide-react';
 import Sidebar from '../_components/Sidebar';
+import Link from 'next/link';
+import SearchSection from '../_components/SearchSection';  // Make sure to adjust the import path
+import AuthModal from '../_components/auth/AuthModal';
+
 
 const ProfessionalsPage = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [slidesToShow, setSlidesToShow] = useState(4);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [selectedProfessionalId, setSelectedProfessionalId] = useState(null);
+
   
   const normalizeGreekText = (text) => {
     return text
@@ -152,77 +159,126 @@ const ProfessionalsPage = () => {
     { icon: '💪', text: 'Personal Trainer' }
   ];
 
+  const availableProfessions = [...new Set(professionals.map(pro => pro.profession))];
   const [filteredPros, setFilteredPros] = useState(professionals);
   const [filters, setFilters] = useState({
     search: '',
+    areaSearch: '',
     location: 'all',
     availability: 'all',
-    priceRange: 'all',
     rating: 'all'
   });
 
   const locations = [...new Set(professionals.map(pro => pro.location.split(',')[0]))];
-  const priceRanges = [
-    { label: 'Όλες οι τιμές', value: 'all' },
-    { label: '€0 - €30', value: '0-30' },
-    { label: '€31 - €50', value: '31-50' },
-    { label: '€51+', value: '51-plus' }
-  ];
 
   useEffect(() => {
-    let result = [...professionals];
-  
+    const params = new URLSearchParams(window.location.search);
+    const searchQuery = params.get('search');
+    const locationQuery = params.get('location');
+
+    if (searchQuery || locationQuery) {
+      setFilters(prev => ({
+        ...prev,
+        search: searchQuery || '',
+        areaSearch: locationQuery || ''
+      }));
+    }
+  }, []);
+
+  // Separate function for applying filters
+  const applyFilters = (pros) => {
+    let result = [...pros];
+
     // Search filter with tone normalization
-    if (filters.search) {
+    if (filters.search && filters.search.trim()) {
       const searchTerm = normalizeGreekText(filters.search);
       result = result.filter(pro =>
-        normalizeGreekText(pro.name).includes(searchTerm) ||
-        normalizeGreekText(pro.profession).includes(searchTerm)
+        (pro.name && normalizeGreekText(pro.name).includes(searchTerm)) ||
+        (pro.profession && normalizeGreekText(pro.profession).includes(searchTerm))
       );
     }
-  
-    // Location filter with tone normalization
-    if (filters.location !== 'all') {
+
+    // Area search filter
+    if (filters.areaSearch && filters.areaSearch.trim()) {
+      const areaTerm = normalizeGreekText(filters.areaSearch);
+      result = result.filter(pro => 
+        pro.location && normalizeGreekText(pro.location).includes(areaTerm)
+      );
+    }
+
+    // Location filter
+    if (filters.location && filters.location !== 'all') {
       const normalizedLocation = normalizeGreekText(filters.location);
       result = result.filter(pro => 
-        normalizeGreekText(pro.location.split(',')[0]) === normalizedLocation
+        pro.location && normalizeGreekText(pro.location.split(',')[0]) === normalizedLocation
       );
     }
-  
-    // Rest of the filters remain the same
-    if (filters.availability !== 'all') {
+
+    // Availability filter
+    if (filters.availability && filters.availability !== 'all') {
       result = result.filter(pro =>
-        filters.availability === 'today' 
-          ? pro.availability.includes('σήμερα')
-          : pro.availability.includes('αύριο')
+        pro.availability && (
+          filters.availability === 'today' 
+            ? pro.availability.includes('σήμερα')
+            : pro.availability.includes('αύριο')
+        )
       );
     }
-  
-    if (filters.priceRange !== 'all') {
+
+    // Rating filter
+    if (filters.rating && filters.rating !== 'all') {
+      const ratingValue = filters.rating;
       result = result.filter(pro => {
-        const price = parseInt(pro.price.replace(/[^0-9]/g, ''));
-        switch(filters.priceRange) {
-          case '0-30':
-            return price <= 30;
-          case '31-50':
-            return price > 30 && price <= 50;
-          case '51-plus':
-            return price > 50;
-          default:
-            return true;
-        }
+        if (ratingValue === '1') return pro.rating >= 1 && pro.rating < 3;
+        if (ratingValue === '3') return pro.rating >= 3 && pro.rating < 4;
+        if (ratingValue === '4') return pro.rating >= 4;
+        return true;
       });
     }
-  
-    if (filters.rating !== 'all') {
-      const minRating = parseInt(filters.rating);
-      result = result.filter(pro => pro.rating >= minRating);
+
+    return result;
+  };
+
+  // Separate function for applying sorting
+  const applySorting = (pros) => {
+    let result = [...pros];
+    
+    switch (filters.sortBy) {
+      case 'reviewCount':
+        result.sort((a, b) => b.reviews - a.reviews);
+        break;
+      case 'highestRating':
+        result.sort((a, b) => b.rating - a.rating);
+        break;
+      case 'lowestRating':
+        result.sort((a, b) => a.rating - b.rating);
+        break;
+      case 'newest':
+        result.sort((a, b) => a.id - b.id);
+        break;
+      case 'experienced':
+        result.sort((a, b) => {
+          const getYears = (exp) => parseInt(exp?.split(' ')[0]) || 0;
+          return getYears(b.experience) - getYears(a.experience);
+        });
+        break;
+      default:
+        result.sort((a, b) => b.reviews - a.reviews);
     }
-  
-    setFilteredPros(result);
+
+    return result;
+  };
+
+  useEffect(() => {
+    // First apply all filters
+    const filteredResults = applyFilters(professionals);
+    // Then apply sorting to the filtered results
+    const sortedResults = applySorting(filteredResults);
+    setFilteredPros(sortedResults);
   }, [filters]);
+
   const renderProfessionalCard = (pro) => (
-    <div className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 flex flex-col h-[520px] relative group">
+      <div key={pro.id} className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 flex flex-col h-[500px] relative group">
       <div className="p-6 bg-[#dfdcf1] h-36">
         <div className="flex items-center space-x-4">
           <div className="relative">
@@ -265,88 +321,73 @@ const ProfessionalsPage = () => {
         </div>
 
         <div className="bg-gray-50 rounded-lg p-4 mt-2">
-          <p className="text-gray-600 text-sm line-clamp-2">{pro.bio || 'Επαγγελματίας στο ErgoHub'}</p>
+          <p className="text-gray-600 text-sm line-clamp-2">
+            {pro.bio || 'Επαγγελματίας στο ErgoHub'}
+          </p>
         </div>
       </div>
 
       <div className="p-6 mt-auto flex gap-4">
-        <button className="w-full bg-transparent border-2 border-[#974dc6]  text-[#974dc6] py-3 px-4 rounded-lg hover:bg-opacity-90 transition-colors duration-300 font-semibold shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
+        <Link 
+          href={`/professionals/${pro.id}`} 
+          className="w-full text-center bg-transparent border-2 border-[#974dc6] text-[#974dc6] py-3 px-4 rounded-xl hover:bg-opacity-90 transition-colors duration-300 font-semibold shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+        >
           Προφίλ
-        </button>
-        <button className="w-full bg-[#974dc6] text-white py-3 px-4 rounded-lg hover:bg-opacity-90 transition-colors duration-300 font-semibold shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
+        </Link>
+        <button 
+          onClick={() => handleBookingClick(pro.id)}
+          className="text-white w-full px-4 py-2 rounded-xl text-lg font-medium transform hover:-translate-y-0.5 transition-all duration-200 shadow-sm hover:shadow-md"
+          style={{ backgroundColor: '#974EC3' }}
+        >
           Ραντεβού
         </button>
       </div>
     </div>
   );
 
+  const handleBookingClick = (professionalId) => {
+    // Here you would check if user is logged in
+    const isLoggedIn = false; // Replace with actual auth check
+    
+    if (!isLoggedIn) {
+      setSelectedProfessionalId(professionalId);
+      setShowAuthModal(true);
+    } else {
+      // Proceed with booking
+      // You can redirect to booking page or show booking modal
+      window.location.href = `/booking/${professionalId}`;
+    }
+  }
+  
   return (
     <div className="min-h-screen bg-[#edecf4]">
       <div className="flex">
-        <Sidebar />
+        <Sidebar setFilters={setFilters} availableProfessions={availableProfessions} />
         <div className="flex-1 p-8">
-          {/* Search and Filters */}
-          <div className="mb-8">
-            <div className="bg-white rounded-lg shadow-md p-6">
-              {/* Search Bar */}
-              <div className="relative mb-6">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                  <input
-                    type="text"
-                    placeholder="Αναζήτηση επαγγελματία ή υπηρεσίας..."
-                    value={filters.search}
-                    onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
-                    className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#974dc6]"
-                  />
-                  {filters.search && (
-                    <button
-                      onClick={() => setFilters(prev => ({ ...prev, search: '' }))}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors duration-200"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-5 w-5"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                    </button>
-                  )}
-                </div>
-                  {/* Most Frequent Searches */}
-                  <div className="mb-6">
-                  <h3 className="text-sm font-medium text-gray-500 mb-3">Τελευταίες αναζητήσεις</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {frequentSearches.map((item, index) => (
-                      <button
-                        key={index}
-                        onClick={() => setFilters(prev => ({ ...prev, search: item.text }))}
-                        className="flex items-center gap-2 px-4 py-2 rounded-full bg-purple-50 hover:bg-purple-100 transition-colors duration-200 text-sm text-purple-800"
-                      >
-                        <span>{item.icon}</span>
-                        <span>{item.text}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-              {/* Filter Controls */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                {/* [Previous filter controls remain the same] */}
-              </div>
-            </div>
-          </div>
+          <SearchSection 
+            filters={filters}
+            setFilters={setFilters}
+            frequentSearches={frequentSearches}
+          />
 
           {/* Results Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredPros.map(renderProfessionalCard)}
           </div>
         </div>
+        <AuthModal 
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        initialTab="user"
+        initialView="register"
+        trigger="booking"
+        onSuccessfulAuth={() => {
+          // After successful auth, redirect to booking
+          if (selectedProfessionalId) {
+            window.location.href = `/booking/${selectedProfessionalId}`;
+          }
+        }}
+      />
       </div>
     </div>
   );

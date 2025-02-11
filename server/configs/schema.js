@@ -33,8 +33,9 @@ export const professionals = pgTable("professionals", {
   phone: varchar("phone", { length: 20 }),
   is_verified: boolean("is_verified").default(false),
   bio: text("bio"),
+  profile_image: text("profile_image"), // Add this line
   rating: real("rating").default(0),
-  availability: json("availability").default([]), // Array of available days/times
+  availability: json("availability").default([]),
   online: boolean("online").default(false),
   business_email: varchar("business_email", { length: 255 }),
   userPlan: varchar("user_plan", { length: 50 }).default('free'),

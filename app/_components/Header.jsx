@@ -1,8 +1,13 @@
 "use client"
 import React from 'react'
 import Link from 'next/link'
+import AuthModal from '../_components/auth/AuthModal'
+import { useState } from 'react'
+
 
 const Header = () => {
+  const [showAuthModal, setShowAuthModal] = useState(false);
+
   const navItems = [
     { name: 'Αρχική', href: '/' },
     { name: 'Άρθρα & Συμβουλές', href: '/blog' },
@@ -49,14 +54,20 @@ const Header = () => {
               >
                 Βρες Ειδικούς
               </Link>
-              <Link 
-                href="/professional/login"
-                className="text-white px-4 py-2 rounded-xl text-lg font-light transform hover:-translate-y-0.5 transition-all duration-200 shadow-sm hover:shadow-md hover:opacity-90"
+              <button 
+                onClick={() => setShowAuthModal(true)}
+                className="text-white px-4 py-2 rounded-xl text-lg font-medium transform hover:-translate-y-0.5 transition-all duration-200 shadow-sm hover:shadow-md"
                 style={{ backgroundColor: '#974EC3' }}
               >
                 Γίνε Ειδικός
-              </Link>
+              </button>
             </div>
+            <AuthModal 
+              isOpen={showAuthModal}
+              onClose={() => setShowAuthModal(false)}
+              initialTab="professional"
+              initialView="register"
+            />
           </div>
         </div>
       </div>
