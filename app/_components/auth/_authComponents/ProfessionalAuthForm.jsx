@@ -4,6 +4,7 @@ import ProfessionalStep2 from './ProfessionalStep2';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 import AuthToggle from './AuthToggle';
+import ProfessionalLoginForm from './ProfessionalLoginForm';
 
 const ProfessionalAuthForm = ({ 
     view, 

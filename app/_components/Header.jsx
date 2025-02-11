@@ -4,9 +4,27 @@ import Link from 'next/link'
 import AuthModal from '../_components/auth/AuthModal'
 import { useState } from 'react'
 
-
 const Header = () => {
-  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [modalConfig, setModalConfig] = useState({
+    isOpen: false,
+    initialTab: 'user',
+    initialView: 'login'
+  });
+
+  const handleAuthModal = (tab, view) => {
+    setModalConfig({
+      isOpen: true,
+      initialTab: tab,
+      initialView: view
+    });
+  };
+
+  const handleCloseModal = () => {
+    setModalConfig(prev => ({
+      ...prev,
+      isOpen: false
+    }));
+  };
 
   const navItems = [
     { name: 'Αρχική', href: '/' },
@@ -55,18 +73,27 @@ const Header = () => {
                 Βρες Ειδικούς
               </Link>
               <button 
-                onClick={() => setShowAuthModal(true)}
+                onClick={() => handleAuthModal('professional', 'register')}
                 className="text-white px-4 py-2 rounded-xl text-lg font-medium transform hover:-translate-y-0.5 transition-all duration-200 shadow-sm hover:shadow-md"
                 style={{ backgroundColor: '#974EC3' }}
               >
                 Γίνε Ειδικός
               </button>
+              <button 
+                onClick={() => handleAuthModal('user', 'login')}
+                className="text-[#974EC3] px-4 py-2 rounded-xl text-md font-medium transition-all duration-300 ease-out 
+                          hover:bg-[#974EC3] hover:text-white hover:shadow-md hover:-translate-y-0.5"
+                style={{ backgroundColor: 'transparent' }}
+              >
+                Εγγραφη / Σύνδεση
+              </button>
             </div>
+
             <AuthModal 
-              isOpen={showAuthModal}
-              onClose={() => setShowAuthModal(false)}
-              initialTab="professional"
-              initialView="register"
+              isOpen={modalConfig.isOpen}
+              onClose={handleCloseModal}
+              initialTab={modalConfig.initialTab}
+              initialView={modalConfig.initialView}
             />
           </div>
         </div>

@@ -1,3 +1,5 @@
+import AuthFormField from "./AuthFormField";
+
 // ProfessionalLoginForm.jsx
 const ProfessionalLoginForm = ({ formData, handleInputChange }) => {
     return (
@@ -23,4 +25,6 @@ const ProfessionalLoginForm = ({ formData, handleInputChange }) => {
       </>
     );
   };
+
+  export default ProfessionalLoginForm;
   

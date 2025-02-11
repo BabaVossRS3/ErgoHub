@@ -1,12 +1,11 @@
 'use client'
 
-// AuthModal.jsx
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { User, Building2 } from 'lucide-react';
-import useAuth from '../../../lib/hooks/useAuth';
-import { useImageUpload } from '../../../lib/hooks/useImageUpload';
-import { useState } from "react";
+import useAuth from '@/lib/hooks/useAuth';
+import { useImageUpload } from '@/lib/hooks/useImageUpload';
+import { useState, useEffect } from "react";
 import UserAuthForm from "./_authComponents/UserAuthForm";
 import ProfessionalAuthForm from './_authComponents/ProfessionalAuthForm';
 
@@ -26,6 +25,12 @@ const AuthModal = ({
   const [view, setView] = useState(initialView);
   const [step, setStep] = useState(1);
   const { uploadImage, isUploading } = useImageUpload();
+
+  // Update internal state when props change
+  useEffect(() => {
+    setActiveTab(initialTab);
+    setView(initialView);
+  }, [initialTab, initialView]);
   
   const [formData, setFormData] = useState({
     email: '',
@@ -124,7 +129,7 @@ const AuthModal = ({
         </DialogHeader>
 
         {trigger !== 'booking' && (
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <Tabs defaultValue={activeTab} value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-2 mb-4">
               <TabsTrigger value="user" className="flex items-center gap-2">
                 <User className="w-4 h-4" />
