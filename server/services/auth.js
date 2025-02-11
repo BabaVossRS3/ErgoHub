@@ -189,3 +189,62 @@ export async function getUserById(userId) {
     throw new Error('Failed to retrieve user data');
   }
 }
+
+export async function migrateUserToProfessional(userId, professionalData) {
+  try {
+    // 1. Get existing user data before deletion
+    const [regularUser] = await db
+      .select()
+      .from(regularUsers)
+      .where(eq(regularUsers.user_id, userId))
+      .execute();
+
+    if (!regularUser) {
+      throw new Error("Regular user not found");
+    }
+
+    // 2. Delete from regular_users
+    await db
+      .delete(regularUsers)
+      .where(eq(regularUsers.user_id, userId))
+      .execute();
+
+    // 3. Update user role
+    const [updatedUser] = await db
+      .update(users)
+      .set({
+        role: 'professional',
+        updated_at: new Date()
+      })
+      .where(eq(users.id, userId))
+      .returning()
+      .execute();
+
+    // 4. Create professional profile
+    const [professionalProfile] = await db
+      .insert(professionals)
+      .values({
+        id: createId(),
+        user_id: userId,
+        professional_name: professionalData.professional_name || regularUser.name,
+        phone: professionalData.phone,
+        profession: professionalData.profession,
+        bio: professionalData.bio,
+        profile_image: professionalData.profile_image,
+        rating: 0,
+        is_verified: false,
+        availability: [],
+        online: false,
+        userPlan: 'free',
+        created_at: new Date(),
+        updated_at: new Date()
+      })
+      .returning()
+      .execute();
+
+    return { ...updatedUser, profile: professionalProfile };
+  } catch (error) {
+    console.error('❌ Migration to professional error:', error);
+    throw new Error(error.message || 'Failed to migrate to professional account');
+  }
+}

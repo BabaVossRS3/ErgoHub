@@ -1,6 +1,8 @@
-"use client"
+'use client';
+
 import React from 'react';
 import Link from 'next/link';
+import { useParams } from 'next/navigation';
 import { 
   MapPin, 
   Clock, 
@@ -13,19 +15,28 @@ import {
   Clock4
 } from 'lucide-react';
 import { Card } from "@/components/ui/card";
-import { useState } from 'react';
-import AuthModal from './../../_components/auth/AuthModal'; // Add this import
+import useAuth from '../../../lib/hooks/useAuth';
 
-// This will be our dynamic page component
-const ProfessionalProfile = ({ params }) => {
-  // Unwrap params using React.use()
-  const unwrappedParams = React.use(params);
-  const professionalId = unwrappedParams.professionalId;
-  const [showAuthModal, setShowAuthModal] = useState(false);
-
+const ProfessionalProfile = () => {
+  const params = useParams();
+  const professionalId = params.professionalId;
   
-  // In a real app, you'd fetch the professional's data using the ID
-  // For now, let's use mock data
+  // Get the store directly
+  const authStore = useAuth();
+  
+  const handleBookingClick = () => {
+    if (!authStore.isAuthenticated) {
+      authStore.openAuthModal({
+        initialTab: 'user',
+        initialView: 'login',
+        trigger: 'booking'
+      });
+    } else {
+      window.location.href = `/booking/${professionalId}`;
+    }
+  };
+
+  // Mock data for the professional
   const professional = {
     id: professionalId,
     name: "Δρ. Μαρία Παπαδοπούλου",
@@ -81,18 +92,6 @@ const ProfessionalProfile = ({ params }) => {
     sunday: "Κυριακή"
   };
 
-  const handleBookingClick = () => {
-    // Here you would check if user is logged in
-    const isLoggedIn = false; // Replace with actual auth check
-    
-    if (!isLoggedIn) {
-      setShowAuthModal(true);
-    } else {
-      // Proceed with booking
-      window.location.href = `/booking/${professional.id}`;
-    }
-  };
-
   return (
     <div className="min-h-screen bg-[#edecf4] py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
@@ -146,7 +145,7 @@ const ProfessionalProfile = ({ params }) => {
             </div>
             
             <div className="flex flex-col gap-4">
-            <button 
+              <button 
                 onClick={handleBookingClick}
                 className="bg-[#974dc6] text-white py-3 px-6 rounded-lg hover:bg-opacity-90 transition-colors duration-300 font-semibold shadow-md hover:shadow-lg"
               >
@@ -226,18 +225,6 @@ const ProfessionalProfile = ({ params }) => {
                 ))}
               </div>
             </Card>
-
-            <AuthModal 
-              isOpen={showAuthModal}
-              onClose={() => setShowAuthModal(false)}
-              initialTab="user"
-              initialView="register"
-              trigger="booking"
-              onSuccessfulAuth={() => {
-                // After successful auth, redirect to booking
-                window.location.href = `/booking/${professional.id}`;
-              }}
-            />
           </div>
         </div>
       </div>

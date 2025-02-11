@@ -11,26 +11,28 @@ import ProfessionalAuthForm from './_authComponents/ProfessionalAuthForm';
 
 const AuthModal = ({ 
   isOpen, 
-  onClose, 
-  initialTab = 'user',  
-  initialView = 'login', 
+  onClose,  
   onSuccessfulAuth,
+  currentUser = null,
   trigger = null 
 }) => {
   const login = useAuth(state => state.login);
   const register = useAuth(state => state.register);
   const isLoading = useAuth(state => state.isLoading);
   const error = useAuth(state => state.error);
-  const [activeTab, setActiveTab] = useState(initialTab);
-  const [view, setView] = useState(initialView);
-  const [step, setStep] = useState(1);
+  const authModalConfig = useAuth(state => state.authModalConfig);
   const { uploadImage, isUploading } = useImageUpload();
+  const migrateUserToProfessional = useAuth(state => state.migrateUserToProfessional);
+
+  const [activeTab, setActiveTab] = useState(authModalConfig.initialTab);
+  const [view, setView] = useState(authModalConfig.initialView);
+  const [step, setStep] = useState(1);
 
   // Update internal state when props change
   useEffect(() => {
-    setActiveTab(initialTab);
-    setView(initialView);
-  }, [initialTab, initialView]);
+    setActiveTab(authModalConfig.initialTab);
+    setView(authModalConfig.initialView);
+  }, [authModalConfig]);
   
   const [formData, setFormData] = useState({
     email: '',
@@ -68,7 +70,28 @@ const AuthModal = ({
     e.preventDefault();
   
     try {
-      if (view === 'login') {
+      if (view === 'migrate' && currentUser) {
+        // Make sure we have all required professional fields
+        if (!formData.profession || !formData.phone || !formData.bio) {
+          set({ error: 'Please fill in all required fields' });
+          return;
+        }
+  
+        const professionalData = {
+          professional_name: formData.name,
+          phone: formData.phone,
+          profession: formData.profession,
+          bio: formData.bio,
+          profile_image: formData.profileImage ? await uploadImage(formData.profileImage) : null
+        };
+  
+        const user = await migrateUserToProfessional(currentUser.id, professionalData);
+        if (user) {
+          onSuccessfulAuth?.();
+          onClose();
+          resetForm();
+        }
+      } else if (view === 'login') {  // <-- Fixed bracket here
         const user = await login(formData.email, formData.password);
         if (user) {
           onSuccessfulAuth?.();
@@ -115,6 +138,7 @@ const AuthModal = ({
     }
   };
 
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[600px] p-6">
@@ -122,67 +146,92 @@ const AuthModal = ({
           <DialogTitle className="text-xl font-bold text-center">
             {trigger === 'booking'
               ? 'Σύνδεση για Κράτηση'
+              : view === 'migrate'
+              ? 'Αναβάθμιση σε Επαγγελματικό Λογαριασμό'
               : activeTab === 'user'
-                ? (view === 'login' ? 'Σύνδεση' : 'Εγγραφή')
-                : (view === 'login' ? 'Σύνδεση Επαγγελματία' : 'Εγγραφή Επαγγελματία')}
+              ? (view === 'login' ? 'Σύνδεση' : 'Εγγραφή')
+              : (view === 'login' ? 'Σύνδεση Επαγγελματία' : 'Εγγραφή Επαγγελματία')}
           </DialogTitle>
         </DialogHeader>
-
-        {trigger !== 'booking' && (
-          <Tabs defaultValue={activeTab} value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-4">
-              <TabsTrigger value="user" className="flex items-center gap-2">
-                <User className="w-4 h-4" />
-                Χρήστης
-              </TabsTrigger>
-              <TabsTrigger value="professional" className="flex items-center gap-2">
-                <Building2 className="w-4 h-4" />
-                Επαγγελματίας
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="user" className="mt-2">
-              <UserAuthForm
-                view={view}
-                formData={formData}
-                handleInputChange={handleInputChange}
-                handleSubmit={handleSubmit}
-                error={error}
-                isLoading={isLoading}
-                setView={setView}
-              />
-            </TabsContent>
-
-            <TabsContent value="professional" className="mt-2">
-              <ProfessionalAuthForm
-                view={view}
-                step={step}
-                formData={formData}
-                handleInputChange={handleInputChange}
-                handleSubmit={handleSubmit}
-                handleFileChange={handleFileChange}
-                error={error}
-                isLoading={isLoading}
-                setView={setView}
-                setStep={setStep}
-                isUploading={isUploading}
-              />
-            </TabsContent>
-          </Tabs>
-        )}
-
-        {trigger === 'booking' && (
+  
+        {/* Show migration form if in migrate view */}
+        {view === 'migrate' ? (
           <div className="mt-2">
-            <UserAuthForm
+            <ProfessionalAuthForm
               view={view}
+              step={1}  // Start from step 1 to collect all professional info
               formData={formData}
               handleInputChange={handleInputChange}
               handleSubmit={handleSubmit}
+              handleFileChange={handleFileChange}
               error={error}
               isLoading={isLoading}
               setView={setView}
+              setStep={setStep}
+              isUploading={isUploading}
+              skipEmailPassword={true} // Only skip the email/password since we have those
             />
           </div>
+        ) : (
+          <>
+            {/* Regular auth flows */}
+            {trigger !== 'booking' && (
+              <Tabs defaultValue={activeTab} value={activeTab} onValueChange={setActiveTab} className="w-full">
+                <TabsList className="grid w-full grid-cols-2 mb-4">
+                  <TabsTrigger value="user" className="flex items-center gap-2">
+                    <User className="w-4 h-4" />
+                    Χρήστης
+                  </TabsTrigger>
+                  <TabsTrigger value="professional" className="flex items-center gap-2">
+                    <Building2 className="w-4 h-4" />
+                    Επαγγελματίας
+                  </TabsTrigger>
+                </TabsList>
+  
+                <TabsContent value="user" className="mt-2">
+                  <UserAuthForm
+                    view={view}
+                    formData={formData}
+                    handleInputChange={handleInputChange}
+                    handleSubmit={handleSubmit}
+                    error={error}
+                    isLoading={isLoading}
+                    setView={setView}
+                  />
+                </TabsContent>
+  
+                <TabsContent value="professional" className="mt-2">
+                  <ProfessionalAuthForm
+                    view={view}
+                    step={step}
+                    formData={formData}
+                    handleInputChange={handleInputChange}
+                    handleSubmit={handleSubmit}
+                    handleFileChange={handleFileChange}
+                    error={error}
+                    isLoading={isLoading}
+                    setView={setView}
+                    setStep={setStep}
+                    isUploading={isUploading}
+                  />
+                </TabsContent>
+              </Tabs>
+            )}
+  
+            {trigger === 'booking' && (
+              <div className="mt-2">
+                <UserAuthForm
+                  view={view}
+                  formData={formData}
+                  handleInputChange={handleInputChange}
+                  handleSubmit={handleSubmit}
+                  error={error}
+                  isLoading={isLoading}
+                  setView={setView}
+                />
+              </div>
+            )}
+          </>
         )}
       </DialogContent>
     </Dialog>
