@@ -8,6 +8,7 @@ import { useImageUpload } from '@/lib/hooks/useImageUpload';
 import { useState, useEffect } from "react";
 import UserAuthForm from "./_authComponents/UserAuthForm";
 import ProfessionalAuthForm from './_authComponents/ProfessionalAuthForm';
+import MigrationForm from './_authComponents/MigrationForm';
 
 const AuthModal = ({ 
   isOpen, 
@@ -23,7 +24,7 @@ const AuthModal = ({
   const authModalConfig = useAuth(state => state.authModalConfig);
   const { uploadImage, isUploading } = useImageUpload();
   const migrateUserToProfessional = useAuth(state => state.migrateUserToProfessional);
-
+  const setError = useAuth(state => state.setError);
   const [activeTab, setActiveTab] = useState(authModalConfig.initialTab);
   const [view, setView] = useState(authModalConfig.initialView);
   const [step, setStep] = useState(1);
@@ -35,7 +36,7 @@ const AuthModal = ({
   }, [authModalConfig]);
   
   const [formData, setFormData] = useState({
-    email: '',
+    email: currentUser?.email || '', // Initialize with current user's email
     password: '',
     name: '',
     phone: '',
@@ -55,6 +56,7 @@ const AuthModal = ({
       profileImage: null
     });
     setStep(1);
+    setView('login');
   };
 
   const handleInputChange = (e) => {
@@ -71,27 +73,44 @@ const AuthModal = ({
   
     try {
       if (view === 'migrate' && currentUser) {
-        // Make sure we have all required professional fields
-        if (!formData.profession || !formData.phone || !formData.bio) {
-          set({ error: 'Please fill in all required fields' });
+        // Handle step progression for migration
+        if (step === 1) {
+          if (!formData.name || !formData.phone || !formData.password) {
+            setError('Παρακαλώ συμπληρώστε όλα τα απαραίτητα πεδία');
+            return;
+          }
+          setStep(2);
           return;
         }
   
-        const professionalData = {
-          professional_name: formData.name,
-          phone: formData.phone,
-          profession: formData.profession,
-          bio: formData.bio,
-          profile_image: formData.profileImage ? await uploadImage(formData.profileImage) : null
-        };
-  
-        const user = await migrateUserToProfessional(currentUser.id, professionalData);
-        if (user) {
-          onSuccessfulAuth?.();
-          onClose();
-          resetForm();
+        // Only proceed with migration on step 2
+        if (!formData.profession || !formData.bio) {
+          setError('Παρακαλώ συμπληρώστε όλα τα απαραίτητα πεδία');
+          return;
         }
-      } else if (view === 'login') {  // <-- Fixed bracket here
+      
+        try {
+          const professionalData = {
+            email: currentUser.email, // Include the current user's email
+            password: formData.password, // Include the password for verification
+            professional_name: formData.name,
+            phone: formData.phone,
+            profession: formData.profession,
+            bio: formData.bio,
+            profile_image: formData.profileImage ? await uploadImage(formData.profileImage) : null
+          };
+      
+          const user = await migrateUserToProfessional(currentUser.id, professionalData);
+          if (user) {
+            onSuccessfulAuth?.();
+            onClose();
+            resetForm();
+          }
+        } catch (error) {
+          console.error('Migration error:', error);
+          setError(error.message || 'Σφάλμα κατά την αναβάθμιση του λογαριασμού');
+        }
+      } else if (view === 'login') {
         const user = await login(formData.email, formData.password);
         if (user) {
           onSuccessfulAuth?.();
@@ -135,10 +154,13 @@ const AuthModal = ({
       }
     } catch (err) {
       console.error('Form submission error:', err);
+      setError(err.message || 'Παρουσιάστηκε ένα απρόσμενο σφάλμα');
     }
   };
 
-
+  // Ensure error is a string
+  const errorMessage = error && typeof error === 'object' ? error.message || 'Παρουσιάστηκε ένα σφάλμα' : error;
+  
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[600px] p-6">
@@ -153,85 +175,104 @@ const AuthModal = ({
               : (view === 'login' ? 'Σύνδεση Επαγγελματία' : 'Εγγραφή Επαγγελματία')}
           </DialogTitle>
         </DialogHeader>
-  
-        {/* Show migration form if in migrate view */}
-        {view === 'migrate' ? (
-          <div className="mt-2">
-            <ProfessionalAuthForm
-              view={view}
-              step={1}  // Start from step 1 to collect all professional info
-              formData={formData}
-              handleInputChange={handleInputChange}
-              handleSubmit={handleSubmit}
-              handleFileChange={handleFileChange}
-              error={error}
-              isLoading={isLoading}
-              setView={setView}
-              setStep={setStep}
-              isUploading={isUploading}
-              skipEmailPassword={true} // Only skip the email/password since we have those
-            />
-          </div>
-        ) : (
-          <>
-            {/* Regular auth flows */}
-            {trigger !== 'booking' && (
-              <Tabs defaultValue={activeTab} value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className="grid w-full grid-cols-2 mb-4">
-                  <TabsTrigger value="user" className="flex items-center gap-2">
-                    <User className="w-4 h-4" />
-                    Χρήστης
-                  </TabsTrigger>
-                  <TabsTrigger value="professional" className="flex items-center gap-2">
-                    <Building2 className="w-4 h-4" />
-                    Επαγγελματίας
-                  </TabsTrigger>
-                </TabsList>
-  
-                <TabsContent value="user" className="mt-2">
-                  <UserAuthForm
-                    view={view}
+
+        {trigger !== 'booking' && (
+          <Tabs 
+            defaultValue={activeTab} 
+            value={activeTab} 
+            onValueChange={(value) => {
+              // Only allow tab change if user is not logged in
+              if (!currentUser || currentUser.role !== 'user') {
+                setActiveTab(value);
+              }
+            }} 
+            className="w-full"
+          >
+            <TabsList className="grid w-full grid-cols-2 mb-4">
+              <TabsTrigger 
+                value="user" 
+                className="flex items-center gap-2"
+                disabled={currentUser && currentUser.role === 'user'} // Disable if user is logged in
+              >
+                <User className="w-4 h-4" />
+                Χρήστης
+              </TabsTrigger>
+              <TabsTrigger 
+                value="professional" 
+                className="flex items-center gap-2"
+              >
+                <Building2 className="w-4 h-4" />
+                Επαγγελματίας
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="user" className="mt-2">
+              <UserAuthForm
+                view={view}
+                formData={formData}
+                handleInputChange={handleInputChange}
+                handleSubmit={handleSubmit}
+                error={errorMessage}
+                isLoading={isLoading}
+                setView={setView}
+              />
+            </TabsContent>
+
+            <TabsContent value="professional" className="mt-2">
+              {currentUser && currentUser.role === 'user' ? (
+                <div className="space-y-4">
+                  <div className="p-4 bg-purple-50 rounded-lg">
+                    <p className="text-sm text-purple-800">
+                      Έχετε ήδη λογαριασμό χρήστη. Συμπληρώστε τα παρακάτω στοιχεία για να αναβαθμίσετε 
+                      τον λογαριασμό σας σε επαγγελματικό.
+                    </p>
+                  </div>
+                  
+                  <MigrationForm
                     formData={formData}
-                    handleInputChange={handleInputChange}
-                    handleSubmit={handleSubmit}
-                    error={error}
-                    isLoading={isLoading}
-                    setView={setView}
-                  />
-                </TabsContent>
-  
-                <TabsContent value="professional" className="mt-2">
-                  <ProfessionalAuthForm
-                    view={view}
-                    step={step}
-                    formData={formData}
+                    setFormData={setFormData} 
                     handleInputChange={handleInputChange}
                     handleSubmit={handleSubmit}
                     handleFileChange={handleFileChange}
-                    error={error}
+                    error={errorMessage}
                     isLoading={isLoading}
-                    setView={setView}
-                    setStep={setStep}
                     isUploading={isUploading}
+                    currentUser={currentUser}
+                    step={step}
+                    setStep={setStep}
                   />
-                </TabsContent>
-              </Tabs>
-            )}
-  
-            {trigger === 'booking' && (
-              <div className="mt-2">
-                <UserAuthForm
+                </div>
+              ) : (
+                <ProfessionalAuthForm
                   view={view}
+                  step={step}
                   formData={formData}
                   handleInputChange={handleInputChange}
                   handleSubmit={handleSubmit}
-                  error={error}
+                  handleFileChange={handleFileChange}
+                  error={errorMessage}
                   isLoading={isLoading}
                   setView={setView}
+                  setStep={setStep}
+                  isUploading={isUploading}
                 />
-              </div>
-            )}
-          </>
+              )}
+            </TabsContent>
+          </Tabs>
+        )}
+
+        {trigger === 'booking' && (
+          <div className="mt-2">
+            <UserAuthForm
+              view={view}
+              formData={formData}
+              handleInputChange={handleInputChange}
+              handleSubmit={handleSubmit}
+              error={errorMessage}
+              isLoading={isLoading}
+              setView={setView}
+            />
+          </div>
         )}
       </DialogContent>
     </Dialog>

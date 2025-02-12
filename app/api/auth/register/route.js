@@ -55,8 +55,11 @@ export async function POST(request) {
       stack: error.stack
     });
     
+    // Make sure to stringify error object or extract message
+    const errorMessage = typeof error === 'object' ? error.message : String(error);
+    
     return NextResponse.json(
-      { error: error.message || 'Registration failed' },
+      { error: errorMessage || 'Registration failed' },
       { status: 400 }
     );
   }

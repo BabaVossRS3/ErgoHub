@@ -79,25 +79,14 @@ const Header = () => {
                 <button 
                   onClick={() => {
                     setShowAuthModal(true);
-                    if (isAuthenticated && user?.role === 'user') {
-                      // Set special migration mode for logged-in regular users
-                      useAuth.setState({ 
-                        authModalConfig: {
-                          initialTab: 'professional',
-                          initialView: 'migrate',
-                          trigger: null
-                        }
-                      });
-                    } else {
-                      // Not logged in, show professional registration
-                      useAuth.setState({ 
-                        authModalConfig: {
-                          initialTab: 'professional',
-                          initialView: 'register',
-                          trigger: null
-                        }
-                      });
-                    }
+                    // Always show professional registration flow
+                    useAuth.setState({ 
+                      authModalConfig: {
+                        initialTab: 'professional',
+                        initialView: 'register',
+                        trigger: null
+                      }
+                    });
                   }}
                   className="text-white px-4 py-2 rounded-xl text-lg font-medium transform hover:-translate-y-0.5 transition-all duration-200 shadow-sm hover:shadow-md"
                   style={{ backgroundColor: '#974EC3' }}
