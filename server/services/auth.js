@@ -190,23 +190,22 @@ export async function getUserById(userId) {
   }
 }
 
+// In auth.js
 export async function migrateUserToProfessional(userId, professionalData) {
   try {
     // 1. Find and verify the user exists
-    const [currentUser] = await db
+    const [user] = await db
       .select()
       .from(users)
       .where(eq(users.id, userId))
       .limit(1)
       .execute();
 
-    if (!currentUser) {
+    if (!user) {
       throw new Error('User not found');
     }
 
-    console.log("Current user:", currentUser);
-
-    // 2. Check if the user is already a professional
+    // 2. Check if they're already a professional
     const [existingProfessional] = await db
       .select()
       .from(professionals)
@@ -215,60 +214,63 @@ export async function migrateUserToProfessional(userId, professionalData) {
       .execute();
 
     if (existingProfessional) {
-      throw new Error('User is already a professional.');
+      throw new Error('User is already a professional');
     }
 
-    // 3. Update the user's role BEFORE deleting the regularUsers record
-    console.log("Updating role for user:", userId);
+    // 3. Update user role first
     await db
       .update(users)
-      .set({ role: 'professional' })
+      .set({ 
+        role: 'professional',
+        updated_at: new Date()
+      })
       .where(eq(users.id, userId))
       .execute();
 
-    // 4. Ensure the user exists in regularUsers before deletion
-    const [regularUser] = await db
-      .select()
-      .from(regularUsers)
-      .where(eq(regularUsers.user_id, userId))
-      .limit(1)
-      .execute();
+    console.log('✅ Updated user role to professional');
 
-    if (!regularUser) {
-      throw new Error('Regular user record not found');
-    }
-
-    // 5. Now delete the regular user record (AFTER updating role)
-    console.log("Deleting regular user record for:", userId);
+    // 4. Delete regular user profile
     await db
       .delete(regularUsers)
       .where(eq(regularUsers.user_id, userId))
       .execute();
 
-    // 6. Create the professional record
-    console.log("Creating professional profile for:", userId);
+    console.log('✅ Deleted regular user profile');
+
+    // 5. Create professional profile
     const [newProfessional] = await db
       .insert(professionals)
       .values({
+        id: createId(),
         user_id: userId,
         professional_name: professionalData.professional_name,
         phone: professionalData.phone,
         profession: professionalData.profession,
         bio: professionalData.bio,
         profile_image: professionalData.profile_image,
-        userPlan: 'free'
+        rating: 0,
+        is_verified: false,
+        availability: [],
+        online: false,
+        userPlan: 'free',
+        created_at: new Date(),
+        updated_at: new Date()
       })
       .returning()
       .execute();
 
+    console.log('✅ Created professional profile');
+
+    // 6. Return updated user data
     return {
       id: userId,
-      email: currentUser.email, // Use email from users table
+      email: user.email,
       role: 'professional',
       profile: newProfessional
     };
+
   } catch (error) {
-    console.error('❌ Migration service error:', error);
-    throw new Error('Failed to migrate user to professional');
+    console.error('❌ Migration error:', error);
+    throw new Error(error.message || 'Failed to migrate user to professional');
   }
 }

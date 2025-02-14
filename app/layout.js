@@ -2,6 +2,7 @@ import { Montserrat } from "next/font/google";
 import "./globals.css";
 import Header from "./_components/Header";
 import AuthModalProvider from "./_components/providers/AuthModalProvider";
+import { Toaster } from "@/components/ui/toaster"
 
 const montserrat = Montserrat({
   variable: "--font-montserrat",
@@ -22,6 +23,7 @@ export default function RootLayout({ children }) {
           <Header/>
           {children}
           <AuthModalProvider/>
+          <Toaster />
         </div>
       </body>
     </html>

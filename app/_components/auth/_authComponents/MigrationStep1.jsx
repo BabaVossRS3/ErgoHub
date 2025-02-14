@@ -17,6 +17,7 @@ const MigrationStep1 = ({ formData, handleInputChange, currentUser }) => {
         placeholder="π.χ. Δρ. Γιάννης Παπαδόπουλος"
         value={formData.name}
         onChange={handleInputChange}
+        required
       />
       
       <AuthFormField
@@ -27,16 +28,7 @@ const MigrationStep1 = ({ formData, handleInputChange, currentUser }) => {
         placeholder="+30 123 456 7890"
         value={formData.phone}
         onChange={handleInputChange}
-      />
-
-      <AuthFormField
-        id="password"
-        name="password"
-        type="password"
-        label="Επιβεβαίωση Κωδικού"
-        placeholder="Εισάγετε τον κωδικό σας για επιβεβαίωση"
-        value={formData.password}
-        onChange={handleInputChange}
+        required
       />
     </>
   );

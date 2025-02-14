@@ -9,6 +9,8 @@ import { useState, useEffect } from "react";
 import UserAuthForm from "./_authComponents/UserAuthForm";
 import ProfessionalAuthForm from './_authComponents/ProfessionalAuthForm';
 import MigrationForm from './_authComponents/MigrationForm';
+import { useToast } from "@/hooks/use-toast";
+
 
 const AuthModal = ({ 
   isOpen, 
@@ -28,6 +30,8 @@ const AuthModal = ({
   const [activeTab, setActiveTab] = useState(authModalConfig.initialTab);
   const [view, setView] = useState(authModalConfig.initialView);
   const [step, setStep] = useState(1);
+  const { toast } = useToast()
+
 
   // Update internal state when props change
   useEffect(() => {
@@ -72,80 +76,119 @@ const AuthModal = ({
     e.preventDefault();
   
     try {
-      if (view === 'migrate' && currentUser) {
-        // Handle step progression for migration
+      // Handle migration case
+      if (currentUser && currentUser.role === 'user' && activeTab === 'professional') {
+        // Step 1 validation
         if (step === 1) {
-          if (!formData.name || !formData.phone || !formData.password) {
-            setError('Παρακαλώ συμπληρώστε όλα τα απαραίτητα πεδία');
+          if (!formData.name || !formData.phone) {
+            setError('Please fill in all required fields');
             return;
           }
           setStep(2);
           return;
         }
   
-        // Only proceed with migration on step 2
-        if (!formData.profession || !formData.bio) {
-          setError('Παρακαλώ συμπληρώστε όλα τα απαραίτητα πεδία');
-          return;
-        }
-      
-        try {
+        // Step 2 validation and submission
+        if (step === 2) {
+          if (!formData.profession || !formData.bio) {
+            setError('Please fill in all required fields');
+            return;
+          }
+  
+          // Upload image if provided
+          let imageUrl = null;
+          if (formData.profileImage) {
+            imageUrl = await uploadImage(formData.profileImage);
+          }
+  
+          // Prepare professional data
           const professionalData = {
-            email: currentUser.email, // Include the current user's email
-            password: formData.password, // Include the password for verification
             professional_name: formData.name,
             phone: formData.phone,
             profession: formData.profession,
             bio: formData.bio,
-            profile_image: formData.profileImage ? await uploadImage(formData.profileImage) : null
+            profile_image: imageUrl
           };
-      
+  
+          // Call migration instead of register
           const user = await migrateUserToProfessional(currentUser.id, professionalData);
           if (user) {
+            toast({
+              title: "Επιτυχής Αναβάθμιση!",
+              description: "Ο λογαριασμός σας αναβαθμίστηκε επιτυχώς σε επαγγελματικό.",
+              className: "bg-green-50 border-green-200 text-green-900",
+              duration: 5000,
+            });
             onSuccessfulAuth?.();
             onClose();
             resetForm();
           }
-        } catch (error) {
-          console.error('Migration error:', error);
-          setError(error.message || 'Σφάλμα κατά την αναβάθμιση του λογαριασμού');
+          return;
         }
-      } else if (view === 'login') {
+      }
+  
+      // Handle regular login
+      if (view === 'login') {
         const user = await login(formData.email, formData.password);
         if (user) {
           onSuccessfulAuth?.();
           onClose();
           resetForm();
         }
-      } else if (view === 'register') {
+        return;
+      }
+  
+      // Handle regular registration
+      if (view === 'register') {
+        // For professional registration step 1
         if (activeTab === 'professional' && step === 1) {
+          if (!formData.email || !formData.password || !formData.name) {
+            setError('Please fill in all required fields');
+            return;
+          }
           setStep(2);
           return;
         }
   
-        let imageUrl;
-        if (activeTab === 'professional' && formData.profileImage) {
-          imageUrl = await uploadImage(formData.profileImage);
+        // For professional registration step 2
+        if (activeTab === 'professional' && step === 2) {
+          if (!formData.profession || !formData.bio) {
+            setError('Please fill in all required fields');
+            return;
+          }
+  
+          let imageUrl = null;
+          if (formData.profileImage) {
+            imageUrl = await uploadImage(formData.profileImage);
+          }
+  
+          const userData = {
+            email: formData.email,
+            password: formData.password,
+            professional_name: formData.name,
+            phone: formData.phone,
+            profession: formData.profession,
+            bio: formData.bio,
+            profile_image: imageUrl
+          };
+  
+          const user = await register(userData);
+          if (user) {
+            onSuccessfulAuth?.();
+            onClose();
+            resetForm();
+          }
+          return;
         }
   
-        const userData = activeTab === 'user' 
-          ? {
-              email: formData.email,
-              password: formData.password,
-              name: formData.name
-            }
-          : {
-              email: formData.email,
-              password: formData.password,
-              professional_name: formData.name,
-              phone: formData.phone,
-              profession: formData.profession,
-              bio: formData.bio,
-              profile_image: imageUrl
-            };
+        // For regular user registration
+        const userData = {
+          email: formData.email,
+          password: formData.password,
+          name: formData.name
+        };
   
         const user = await register(userData);
-        
         if (user) {
           onSuccessfulAuth?.();
           onClose();
@@ -154,7 +197,7 @@ const AuthModal = ({
       }
     } catch (err) {
       console.error('Form submission error:', err);
-      setError(err.message || 'Παρουσιάστηκε ένα απρόσμενο σφάλμα');
+      setError(err.message || 'An unexpected error occurred');
     }
   };
 

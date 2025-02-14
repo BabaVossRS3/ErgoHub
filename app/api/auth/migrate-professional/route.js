@@ -5,18 +5,26 @@ import { generateToken, generateAuthCookieConfig } from '../../../../server/serv
 
 export async function POST(request) {
   try {
-    const { userId, ...professionalData } = await request.json();
-    console.log('📝 Migration data received:', { userId, ...professionalData });
+    const { userId, professional_name, phone, profession, bio, profile_image } = await request.json();
+    console.log('📝 Migration data received:', { userId, professional_name, profession });
     
     // Validate required professional fields
-    if (!professionalData.professional_name || !professionalData.profession) {
+    if (!professional_name || !profession) {
       return NextResponse.json(
         { error: 'Professional name and profession are required' },
         { status: 400 }
       );
     }
 
-    // Perform the migration
+    // Perform the migration with only the professional-specific data
+    const professionalData = {
+      professional_name,
+      phone,
+      profession,
+      bio,
+      profile_image
+    };
+
     const user = await migrateUserToProfessional(userId, professionalData);
 
     // Generate new JWT token with updated role
@@ -37,11 +45,8 @@ export async function POST(request) {
       stack: error.stack
     });
     
-    // Make sure to stringify error object or extract message
-    const errorMessage = typeof error === 'object' ? error.message : String(error);
-    
     return NextResponse.json(
-      { error: errorMessage || 'Migration failed' },
+      { error: error.message || 'Migration failed' },
       { status: 400 }
     );
   }
