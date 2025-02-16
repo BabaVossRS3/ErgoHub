@@ -19,19 +19,46 @@ export async function POST(request) {
       );
     }
 
-    // Additional validation for professionals
+    // Enhanced validation for professionals
     if (isProfessional) {
-      if (!userData.professional_name || !userData.profession) {
+      const requiredFields = [
+        'professional_name',
+        'profession',
+        'business_address',
+        'experience_years',
+        'terms_accepted'
+      ];
+
+      const missingFields = requiredFields.filter(field => {
+        // Special handling for experience_years since 0 is a valid value
+        if (field === 'experience_years') {
+          return userData[field] === undefined || userData[field] === null;
+        }
+        return !userData[field];
+      });
+
+      if (missingFields.length > 0) {
         return NextResponse.json(
-          { error: 'Professional name and profession are required' },
+          { 
+            error: `Missing required fields: ${missingFields.join(', ')}`,
+            missingFields 
+          },
           { status: 400 }
         );
+      }
+
+      // Add business_email and terms_accepted_at
+      userData.business_email = userData.email;
+      if (userData.terms_accepted) {
+        userData.terms_accepted_at = new Date().toISOString();
       }
     }
 
     // Create the user based on type
     let user;
     if (isProfessional) {
+      // Ensure experience_years is an integer
+      userData.experience_years = parseInt(userData.experience_years);
       user = await createProfessional(userData);
     } else {
       user = await createUser(userData);
@@ -47,6 +74,12 @@ export async function POST(request) {
     const cookieConfig = generateAuthCookieConfig(token);
     response.cookies.set(cookieConfig);
 
+    // Log the final user data being sent to the database
+    console.log('✅ User data being saved:', {
+      ...userData,
+      password: '[REDACTED]'
+    });
+
     return response;
 
   } catch (error) {
@@ -55,7 +88,6 @@ export async function POST(request) {
       stack: error.stack
     });
     
-    // Make sure to stringify error object or extract message
     const errorMessage = typeof error === 'object' ? error.message : String(error);
     
     return NextResponse.json(

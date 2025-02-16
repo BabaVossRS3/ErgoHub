@@ -5,25 +5,71 @@ import { generateToken, generateAuthCookieConfig } from '../../../../server/serv
 
 export async function POST(request) {
   try {
-    const { userId, professional_name, phone, profession, bio, profile_image } = await request.json();
-    console.log('📝 Migration data received:', { userId, professional_name, profession });
+    const { 
+      userId, 
+      professional_name, 
+      phone, 
+      profession, 
+      bio, 
+      profile_image,
+      business_address,
+      business_email,
+      experience_years,
+      terms_accepted
+    } = await request.json();
+
+    console.log('📝 Migration data received:', { 
+      userId, 
+      professional_name, 
+      profession,
+      business_address,
+      experience_years,
+      terms_accepted
+    });
     
-    // Validate required professional fields
-    if (!professional_name || !profession) {
+    // Enhanced validation for required fields
+    const requiredFields = {
+      professional_name: 'Professional name',
+      profession: 'Profession',
+      business_address: 'Business address',
+      experience_years: 'Years of experience',
+      terms_accepted: 'Terms acceptance'
+    };
+
+    const missingFields = Object.entries(requiredFields)
+      .filter(([field, label]) => {
+        if (field === 'experience_years') {
+          return experience_years === undefined || experience_years === null;
+        }
+        return !eval(field);
+      })
+      .map(([_, label]) => label);
+
+    if (missingFields.length > 0) {
       return NextResponse.json(
-        { error: 'Professional name and profession are required' },
+        { error: `Missing required fields: ${missingFields.join(', ')}` },
         { status: 400 }
       );
     }
 
-    // Perform the migration with only the professional-specific data
+    // Prepare the professional data with all fields
     const professionalData = {
       professional_name,
       phone,
       profession,
       bio,
-      profile_image
+      profile_image,
+      business_address,
+      business_email,
+      experience_years: parseInt(experience_years),
+      terms_accepted,
+      terms_accepted_at: terms_accepted ? new Date().toISOString() : null
     };
+
+    console.log('✅ Professional data being saved:', {
+      ...professionalData,
+      userId
+    });
 
     const user = await migrateUserToProfessional(userId, professionalData);
 

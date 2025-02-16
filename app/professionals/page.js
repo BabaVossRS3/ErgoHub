@@ -1,20 +1,80 @@
+
+
 "use client"
-import React, { useState, useEffect } from 'react';
-import { Search, MapPin, Clock, Star , Award , CheckCircle } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Search, MapPin, Clock, Star, Award, CheckCircle } from 'lucide-react';
+import debounce from 'lodash/debounce';
 import Sidebar from '../_components/Sidebar';
 import Link from 'next/link';
-import SearchSection from '../_components/SearchSection';  // Make sure to adjust the import path
+import SearchSection from '../_components/SearchSection';
 import AuthModal from '../_components/auth/AuthModal';
+import { useRouter, useSearchParams } from 'next/navigation';
 
+const frequentSearches = [
+  { icon: '🔧', text: 'Υδραυλικός' },
+  { icon: '⚡', text: 'Ηλεκτρολόγος' },
+  { icon: '🧹', text: 'Καθαρισμός Σπιτιού' },
+  { icon: '🎨', text: 'Ελαιοχρωματιστής' },
+  { icon: '🔨', text: 'Μάστορας' },
+  { icon: '🪴', text: 'Κηπουρός' },
+  { icon: '👩‍⚕️', text: 'Παιδίατρος' },
+  { icon: '💪', text: 'Personal Trainer' }
+];
 
 const ProfessionalsPage = () => {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [slidesToShow, setSlidesToShow] = useState(4);
+  const [professionals, setProfessionals] = useState([]);
+  const [filteredPros, setFilteredPros] = useState([]);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [selectedProfessionalId, setSelectedProfessionalId] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const searchParams = useSearchParams();
+  const [filters, setFilters] = useState({
+    search: searchParams.get('search') || '',
+    areaSearch: searchParams.get('location') || '',
+    location: searchParams.get('location') || 'all',
+    availability: 'all',
+    rating: 'all',
+    sortBy: searchParams.get('sortBy') || 'reviewCount'
+  });
 
-  
+  // Create a memoized debounced fetch function
+  const debouncedFetch = useMemo(
+    () =>
+      debounce(async (queryParams) => {
+        try {
+          setLoading(true);
+          const response = await fetch(`/api/professionals?${queryParams}`);
+          if (!response.ok) throw new Error('Failed to fetch professionals');
+          const data = await response.json();
+          setProfessionals(data);
+        } catch (err) {
+          setError(err.message);
+        } finally {
+          setLoading(false);
+        }
+      }, 500),
+    []
+  );
+
+  // Fetch professionals when certain filters change
+  useEffect(() => {
+    const queryParams = new URLSearchParams();
+    
+    // Only include filters that require server-side processing
+    if (filters.location !== 'all') queryParams.append('location', filters.location);
+    if (filters.rating !== 'all') queryParams.append('rating', filters.rating);
+    if (filters.availability !== 'all') queryParams.append('availability', filters.availability);
+    
+    debouncedFetch(queryParams);
+
+    return () => {
+      debouncedFetch.cancel();
+    };
+  }, [filters.location, filters.rating, filters.availability]);
+
   const normalizeGreekText = (text) => {
+    if (!text) return '';
     return text
       .toLowerCase()
       .normalize('NFD')
@@ -31,218 +91,29 @@ const ProfessionalsPage = () => {
       .replace(/ΰ/g, 'υ')
       .replace(/ώ/g, 'ω');
   };
-  
 
-
-  const professionals = [
-    {
-      id: 1,
-      name: "Δρ. Μαρία Παπαδοπούλου",
-      profession: "Παιδίατρος",
-      rating: 4.8,
-      reviews: 127,
-      location: "Χαλάνδρι, Αθήνα",
-      availability: "Διαθέσιμη σήμερα",
-      imageUrl: "./images/happy-woman-home-coronavirus-quarantine.jpg",
-      is_verified: true,
-      bio: "Εξειδικευμένη παιδίατρος με έμφαση στην προληπτική ιατρική",
-      experience: "15 χρόνια εμπειρίας"
-    },
-    {
-      id: 2,
-      name: "Γιώργος Αντωνίου",
-      profession: "Ηλεκτρολόγος",
-      rating: 4.9,
-      reviews: 89,
-      location: "Νέα Σμύρνη, Αθήνα",
-      availability: "Διαθέσιμος αύριο",
-      imageUrl: "./images/handsome-young-cheerful-man-with-arms-crossed.jpg",
-      bio: "Έμπειρος ηλεκτρολόγος με εξειδίκευση σε οικιακές και βιομηχανικές εγκαταστάσεις",
-      experience: "10 χρόνια εμπειρίας"
-    },
-    {
-      id: 3,
-      name: "Ελένη Δημητρίου",
-      profession: "Φυσιοθεραπεύτρια",
-      rating: 5.0,
-      reviews: 156,
-      location: "Γλυφάδα, Αθήνα",
-      availability: "Διαθέσιμη σήμερα",
-      imageUrl: "./images/portrait-beautiful-young-woman-standing-grey-wall.jpg",
-      bio: "Ειδικευμένη φυσιοθεραπεύτρια με έμφαση στην αποκατάσταση τραυματισμών και χρόνιου πόνου" ,
-      is_verified: true,
-      experience: "8 χρόνια εμπειρίας"
-    },
-    {
-      id: 4,
-      name: "Νίκος Κωνσταντίνου",
-      profession: "Υδραυλικός",
-      rating: 4.7,
-      reviews: 92,
-      location: "Περιστέρι, Αθήνα",
-      availability: "Διαθέσιμος σήμερα",
-      imageUrl: "./images/pexels-olly-834863.jpg",
-      bio: "Πιστοποιημένος υδραυλικός με εμπειρία σε εγκαταστάσεις, συντήρηση και επισκευές δικτύων νερού"  ,
-      experience: "12 χρόνια εμπειρίας"
-    },
-    {
-        id: 5,
-        name: "Αναστασία Μαυροπούλου",
-        profession: "Ψυχολόγος",
-        rating: 5.0,
-        reviews: 203,
-        location: "Κηφισιά, Αθήνα",
-        availability: "Διαθέσιμη αύριο",
-        imageUrl: "./images/portrait-beautiful-young-woman-standing-grey-wall.jpg",
-        bio: "Ψυχολόγος με εξειδίκευση στη γνωσιακή-συμπεριφορική θεραπεία και τη διαχείριση άγχους"  ,
-        experience: "13 χρόνια εμπειρίας"
-      },
-      {
-        id: 6,
-        name: "Βασίλης Αλεξάνδρου",
-        profession: "Προπονητής Personal Trainer",
-        rating: 4.9,
-        reviews: 167,
-        location: "Γλυφάδα, Αθήνα",
-        availability: "Διαθέσιμος σήμερα",
-        imageUrl: "./images/handsome-young-cheerful-man-with-arms-crossed.jpg",
-        bio: "Έμπειρος προπονητής με εξειδίκευση στη βελτίωση της φυσικής κατάστασης και αθλητικών επιδόσεων"  ,
-        is_verified: true,
-        experience: "9 χρόνια εμπειρίας"
-      },
-      {
-        id: 7,
-        name: "Χριστίνα Οικονόμου",
-        profession: "Δικηγόρος",
-        rating: 4.8,
-        reviews: 142,
-        location: "Μαρούσι, Αθήνα",
-        availability: "Διαθέσιμη σήμερα",
-        imageUrl: "./images/portrait-beautiful-young-woman-standing-grey-wall.jpg",
-        bio: "Προσωπικός γυμναστής με έμφαση στη λειτουργική προπόνηση και την εξατομικευμένη άσκηση"  ,
-        experience: "17 χρόνια εμπειρίας"
-      },
-      {
-        id: 8,
-        name: "Αντώνης Παπανικολάου",
-        profession: "Λογιστής",
-        rating: 4.9,
-        reviews: 178,
-        location: "Πειραιάς",
-        availability: "Διαθέσιμος αύριο",
-        imageUrl: "./images/handsome-young-cheerful-man-with-arms-crossed.jpg",
-        bio: "Έμπειρος λογιστής με εξειδίκευση στη φορολογική συμμόρφωση και τη χρηματοοικονομική ανάλυση"  ,
-        experience: "11 χρόνια εμπειρίας"
-      },
-      {
-        id: 9,
-        name: "Σοφία Καραγιάννη",
-        profession: "Διατροφολόγος",
-        rating: 4.7,
-        reviews: 134,
-        location: "Νέα Σμύρνη, Αθήνα",
-        availability: "Διαθέσιμη σήμερα",
-        imageUrl: "./images/portrait-beautiful-young-woman-standing-grey-wall.jpg",
-        bio: "Διατροφολόγος με έμφαση στη δημιουργία εξατομικευμένων διατροφικών προγραμμάτων"  ,
-        experience: "7 χρόνια εμπειρίας"
-      }
-  ];
-
-  const frequentSearches = [
-    { icon: '🔧', text: 'Υδραυλικός' },
-    { icon: '⚡', text: 'Ηλεκτρολόγος' },
-    { icon: '🧹', text: 'Καθαρισμός Σπιτιού' },
-    { icon: '🎨', text: 'Ελαιοχρωματιστής' },
-    { icon: '🔨', text: 'Μάστορας' },
-    { icon: '🪴', text: 'Κηπουρός' },
-    { icon: '👩‍⚕️', text: 'Παιδίατρος' },
-    { icon: '💪', text: 'Personal Trainer' }
-  ];
-
-  const availableProfessions = [...new Set(professionals.map(pro => pro.profession))];
-  const [filteredPros, setFilteredPros] = useState(professionals);
-  const [filters, setFilters] = useState({
-    search: '',
-    areaSearch: '',
-    location: 'all',
-    availability: 'all',
-    rating: 'all'
-  });
-
-  const locations = [...new Set(professionals.map(pro => pro.location.split(',')[0]))];
-
+  // Local filtering and sorting effect
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const searchQuery = params.get('search');
-    const locationQuery = params.get('location');
+    let result = [...professionals];
 
-    if (searchQuery || locationQuery) {
-      setFilters(prev => ({
-        ...prev,
-        search: searchQuery || '',
-        areaSearch: locationQuery || ''
-      }));
-    }
-  }, []);
-
-  // Separate function for applying filters
-  const applyFilters = (pros) => {
-    let result = [...pros];
-
-    // Search filter with tone normalization
-    if (filters.search && filters.search.trim()) {
+    // Apply local search filter
+    if (filters.search || filters.areaSearch) {
       const searchTerm = normalizeGreekText(filters.search);
-      result = result.filter(pro =>
-        (pro.name && normalizeGreekText(pro.name).includes(searchTerm)) ||
-        (pro.profession && normalizeGreekText(pro.profession).includes(searchTerm))
-      );
-    }
-
-    // Area search filter
-    if (filters.areaSearch && filters.areaSearch.trim()) {
       const areaTerm = normalizeGreekText(filters.areaSearch);
-      result = result.filter(pro => 
-        pro.location && normalizeGreekText(pro.location).includes(areaTerm)
-      );
-    }
 
-    // Location filter
-    if (filters.location && filters.location !== 'all') {
-      const normalizedLocation = normalizeGreekText(filters.location);
-      result = result.filter(pro => 
-        pro.location && normalizeGreekText(pro.location.split(',')[0]) === normalizedLocation
-      );
-    }
-
-    // Availability filter
-    if (filters.availability && filters.availability !== 'all') {
-      result = result.filter(pro =>
-        pro.availability && (
-          filters.availability === 'today' 
-            ? pro.availability.includes('σήμερα')
-            : pro.availability.includes('αύριο')
-        )
-      );
-    }
-
-    // Rating filter
-    if (filters.rating && filters.rating !== 'all') {
-      const ratingValue = filters.rating;
       result = result.filter(pro => {
-        if (ratingValue === '1') return pro.rating >= 1 && pro.rating < 3;
-        if (ratingValue === '3') return pro.rating >= 3 && pro.rating < 4;
-        if (ratingValue === '4') return pro.rating >= 4;
-        return true;
+        const matchesSearch = !searchTerm || 
+          normalizeGreekText(pro.name).includes(searchTerm) ||
+          normalizeGreekText(pro.profession).includes(searchTerm);
+        
+        const matchesArea = !areaTerm ||
+          normalizeGreekText(pro.location).includes(areaTerm);
+
+        return matchesSearch && matchesArea;
       });
     }
 
-    return result;
-  };
-
-  // Separate function for applying sorting
-  const applySorting = (pros) => {
-    let result = [...pros];
-    
+    // Apply sorting
     switch (filters.sortBy) {
       case 'reviewCount':
         result.sort((a, b) => b.reviews - a.reviews);
@@ -254,7 +125,7 @@ const ProfessionalsPage = () => {
         result.sort((a, b) => a.rating - b.rating);
         break;
       case 'newest':
-        result.sort((a, b) => a.id - b.id);
+        result.sort((a, b) => b.id - a.id);
         break;
       case 'experienced':
         result.sort((a, b) => {
@@ -262,23 +133,47 @@ const ProfessionalsPage = () => {
           return getYears(b.experience) - getYears(a.experience);
         });
         break;
-      default:
-        result.sort((a, b) => b.reviews - a.reviews);
     }
 
-    return result;
-  };
+    setFilteredPros(result);
+  }, [professionals, filters.search, filters.areaSearch, filters.sortBy]);
 
+  // Add this new useEffect for URL management
   useEffect(() => {
-    // First apply all filters
-    const filteredResults = applyFilters(professionals);
-    // Then apply sorting to the filtered results
-    const sortedResults = applySorting(filteredResults);
-    setFilteredPros(sortedResults);
+    const params = new URLSearchParams();
+      
+    if (filters.search) params.append('search', filters.search);
+    if (filters.areaSearch) params.append('location', filters.areaSearch);
+    if (filters.sortBy) params.append('sortBy', filters.sortBy);
+    
+    const newUrl = `/professionals${params.toString() ? `?${params.toString()}` : ''}`;
+    window.history.replaceState({}, '', newUrl);
   }, [filters]);
 
+  const handleFilterChange = (newFilters) => {
+    if (typeof newFilters === 'function') {
+      setFilters(newFilters);
+    } else {
+      setFilters(prev => ({
+        ...prev,
+        ...newFilters
+      }));
+    }
+  };
+
+  const handleBookingClick = (professionalId) => {
+    const isLoggedIn = false; // Replace with actual auth check
+    
+    if (!isLoggedIn) {
+      setSelectedProfessionalId(professionalId);
+      setShowAuthModal(true);
+    } else {
+      window.location.href = `/booking/${professionalId}`;
+    }
+  };
+
   const renderProfessionalCard = (pro) => (
-      <div key={pro.id} className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 flex flex-col h-[500px] relative group">
+    <div key={pro.id} className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 flex flex-col h-[500px] relative group">
       <div className="p-6 bg-[#dfdcf1] h-36">
         <div className="flex items-center space-x-4">
           <div className="relative">
@@ -317,7 +212,7 @@ const ProfessionalsPage = () => {
 
         <div className="flex items-center space-x-2 text-gray-600">
           <Award className="w-4 h-4 flex-shrink-0" />
-          <span className="truncate">{pro.experience}</span>
+          <span className="truncate">{pro.experience} Χρόνια Εμπειρίας</span>
         </div>
 
         <div className="bg-gray-50 rounded-lg p-4 mt-2">
@@ -345,49 +240,46 @@ const ProfessionalsPage = () => {
     </div>
   );
 
-  const handleBookingClick = (professionalId) => {
-    // Here you would check if user is logged in
-    const isLoggedIn = false; // Replace with actual auth check
-    
-    if (!isLoggedIn) {
-      setSelectedProfessionalId(professionalId);
-      setShowAuthModal(true);
-    } else {
-      // Proceed with booking
-      // You can redirect to booking page or show booking modal
-      window.location.href = `/booking/${professionalId}`;
-    }
-  }
-  
   return (
     <div className="min-h-screen bg-[#edecf4]">
       <div className="flex">
-        <Sidebar setFilters={setFilters} availableProfessions={availableProfessions} />
+        <Sidebar 
+          setFilters={handleFilterChange} 
+          availableProfessions={[...new Set(professionals.map(pro => pro.profession))]}
+          locations={[...new Set(professionals.map(pro => pro.location.split(',')[0]))]}
+        />
         <div className="flex-1 p-8">
           <SearchSection 
             filters={filters}
-            setFilters={setFilters}
+            setFilters={handleFilterChange}
             frequentSearches={frequentSearches}
           />
-
-          {/* Results Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredPros.map(renderProfessionalCard)}
-          </div>
+          
+          {loading ? (
+            <div className="flex items-center justify-center p-8">
+              <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-[#974dc6]"></div>
+            </div>
+          ) : error ? (
+            <div className="text-red-500 text-xl text-center p-8">Error: {error}</div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredPros.map(renderProfessionalCard)}
+            </div>
+          )}
         </div>
+        
         <AuthModal 
-        isOpen={showAuthModal}
-        onClose={() => setShowAuthModal(false)}
-        initialTab="user"
-        initialView="register"
-        trigger="booking"
-        onSuccessfulAuth={() => {
-          // After successful auth, redirect to booking
-          if (selectedProfessionalId) {
-            window.location.href = `/booking/${selectedProfessionalId}`;
-          }
-        }}
-      />
+          isOpen={showAuthModal}
+          onClose={() => setShowAuthModal(false)}
+          initialTab="user"
+          initialView="register"
+          trigger="booking"
+          onSuccessfulAuth={() => {
+            if (selectedProfessionalId) {
+              window.location.href = `/booking/${selectedProfessionalId}`;
+            }
+          }}
+        />
       </div>
     </div>
   );

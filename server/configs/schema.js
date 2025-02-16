@@ -35,12 +35,15 @@ export const professionals = pgTable("professionals", {
   bio: text("bio"),
   profile_image: text("profile_image"), // Add this line
   rating: real("rating").default(0),
+  experience_years: integer("experience_years"),
   availability: json("availability").default([]),
   online: boolean("online").default(false),
   business_email: varchar("business_email", { length: 255 }),
   userPlan: varchar("user_plan", { length: 50 }).default('free'),
   created_at: timestamp("created_at").defaultNow().notNull(),
   updated_at: timestamp("updated_at").defaultNow().notNull(),
+  terms_accepted: boolean("terms_accepted").notNull().default(false),
+  terms_accepted_at: timestamp("terms_accepted_at"),
 });
 
 // Bookings table

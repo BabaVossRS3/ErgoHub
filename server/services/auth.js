@@ -59,11 +59,16 @@ export async function createProfessional(userData) {
       phone, 
       profession, 
       bio, 
-      profile_image 
+      profile_image,
+      business_address,    
+      business_email,      
+      experience_years,    
+      terms_accepted      
     } = userData;
     
     const hashedPassword = await bcrypt.hash(password, 10);
     const userId = createId();
+    const currentDate = new Date();
     
     // Create base professional user
     const [baseUser] = await db
@@ -73,8 +78,8 @@ export async function createProfessional(userData) {
         email,
         password: hashedPassword,
         role: 'professional',
-        created_at: new Date(),
-        updated_at: new Date()
+        created_at: currentDate,
+        updated_at: currentDate
       })
       .returning()
       .execute();
@@ -83,7 +88,7 @@ export async function createProfessional(userData) {
       throw new Error("Failed to create professional user.");
     }
 
-    // Create professional profile
+    // Create professional profile with all fields
     const [professionalProfile] = await db
       .insert(professionals)
       .values({
@@ -94,20 +99,27 @@ export async function createProfessional(userData) {
         profession,
         bio,
         profile_image,
+        business_address,    
+        business_email,      
+        experience_years: typeof experience_years === 'string' ? parseInt(experience_years) : experience_years,    
+        terms_accepted,      
+        terms_accepted_at: terms_accepted ? currentDate : null,
         rating: 0,
         is_verified: false,
         availability: [],
         online: false,
         userPlan: 'free',
-        created_at: new Date(),
-        updated_at: new Date()
+        created_at: currentDate,
+        updated_at: currentDate
       })
       .returning()
       .execute();
 
+    console.log('✅ Created professional profile:', professionalProfile);
+
     return { ...baseUser, profile: professionalProfile };
   } catch (error) {
-    console.error('❌ Create professional error:', error);
+    console.error('❌ Create professional error:', error, '\nStack:', error.stack);
     throw new Error(error.message || 'Professional registration failed');
   }
 }
@@ -217,12 +229,14 @@ export async function migrateUserToProfessional(userId, professionalData) {
       throw new Error('User is already a professional');
     }
 
+    const currentDate = new Date();
+
     // 3. Update user role first
     await db
       .update(users)
       .set({ 
         role: 'professional',
-        updated_at: new Date()
+        updated_at: currentDate
       })
       .where(eq(users.id, userId))
       .execute();
@@ -248,18 +262,25 @@ export async function migrateUserToProfessional(userId, professionalData) {
         profession: professionalData.profession,
         bio: professionalData.bio,
         profile_image: professionalData.profile_image,
+        business_address: professionalData.business_address,    
+        business_email: professionalData.business_email,      
+        experience_years: typeof professionalData.experience_years === 'string' 
+          ? parseInt(professionalData.experience_years) 
+          : professionalData.experience_years,
+        terms_accepted: professionalData.terms_accepted,      
+        terms_accepted_at: professionalData.terms_accepted ? currentDate : null,
         rating: 0,
         is_verified: false,
         availability: [],
         online: false,
         userPlan: 'free',
-        created_at: new Date(),
-        updated_at: new Date()
+        created_at: currentDate,
+        updated_at: currentDate
       })
       .returning()
       .execute();
 
-    console.log('✅ Created professional profile');
+    console.log('✅ Created professional profile:', newProfessional);
 
     // 6. Return updated user data
     return {
@@ -270,7 +291,7 @@ export async function migrateUserToProfessional(userId, professionalData) {
     };
 
   } catch (error) {
-    console.error('❌ Migration error:', error);
+    console.error('❌ Migration error:', error, '\nStack:', error.stack);
     throw new Error(error.message || 'Failed to migrate user to professional');
   }
 }

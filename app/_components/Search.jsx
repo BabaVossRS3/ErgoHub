@@ -5,7 +5,7 @@ import { Search as SearchIcon, MapPin, ChevronDown } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { jobCategories, searchProfessions } from '../../data/jobCategories';
 import { searchAreas, greekAreas } from '../../data/greekAreas';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 
 const normalizeGreekText = (text) => {
@@ -27,11 +27,14 @@ const normalizeGreekText = (text) => {
 };
 
 const Search = () => {
-  const [service, setService] = useState('');
-  const [location, setLocation] = useState('');
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const [service, setService] = useState(searchParams.get('search') || '');
+  const [location, setLocation] = useState(searchParams.get('location') || '');
   const [serviceResults, setServiceResults] = useState([]);
   const [locationResults, setLocationResults] = useState([]);
-  const router = useRouter();
+
 
 
   // Frequent searches data
@@ -203,15 +206,33 @@ const Search = () => {
   const handleSearch = (e) => {
     e.preventDefault();
     
-    // Build the query parameters
     const params = new URLSearchParams();
-    if (service) params.append('search', service);
-    if (location) params.append('location', location);
     
-    // Navigate to professionals page with filters
+    // Add search parameters
+    if (service) {
+      params.append('search', service);
+    }
+    
+    if (location) {
+      params.append('location', location);
+    }
+    
+    // Add any default parameters
+    params.append('sortBy', 'reviewCount');
+    
+    const queryString = params.toString();
+    router.push(`/professionals?${queryString}`);
+  };
+  const handleFrequentSearchClick = (searchText) => {
+    setService(searchText);
+    setServiceResults([]);
+    
+    const params = new URLSearchParams();
+    params.append('search', searchText);
+    params.append('sortBy', 'reviewCount');
+    
     router.push(`/professionals?${params.toString()}`);
   };
-
   return (
     <Card className="p-6 shadow-lg bg-white backdrop-blur-sm mt-20">
       <form onSubmit={handleSearch} className="flex flex-col md:flex-row gap-4">
@@ -296,10 +317,7 @@ const Search = () => {
           {frequentSearches.slice(0,4).map((item, index) => (
             <button
               key={index}
-              onClick={() => {
-                setService(item.text);
-                setServiceResults([]);
-              }}
+              onClick={() => handleFrequentSearchClick(item.text)}
               className="flex items-center gap-2 px-4 py-2 rounded-full bg-purple-50 hover:bg-purple-100 transition-colors duration-200 text-sm text-purple-800"
             >
               <span>{item.icon}</span>
@@ -308,7 +326,6 @@ const Search = () => {
           ))}
         </div>
       </div>
-      
     </Card>
   );
 };

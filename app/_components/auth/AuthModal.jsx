@@ -40,13 +40,16 @@ const AuthModal = ({
   }, [authModalConfig]);
   
   const [formData, setFormData] = useState({
-    email: currentUser?.email || '', // Initialize with current user's email
+    email: currentUser?.email || '',
     password: '',
     name: '',
     phone: '',
     profession: '',
     bio: '',
-    profileImage: null
+    profileImage: null,
+    business_address: '',
+    experience_years: '',
+    terms_accepted: false
   });
 
   const resetForm = () => {
@@ -57,7 +60,10 @@ const AuthModal = ({
       phone: '',
       profession: '',
       bio: '',
-      profileImage: null
+      profileImage: null,
+      business_address: '',
+      experience_years: '',
+      terms_accepted: false  // Added this field
     });
     setStep(1);
     setView('login');
@@ -65,11 +71,33 @@ const AuthModal = ({
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+    
+    // Special handling for experience_years to ensure it's a number
+    if (name === 'experience_years') {
+      const numValue = value === '' ? '' : parseInt(value);
+      setFormData(prev => ({ ...prev, [name]: numValue }));
+      return;
+    }
+    
+    // Special handling for business_address from LocationSelect
+    if (name === 'business_address') {
+      console.log('Location update:', value);
+    }
+    
     setFormData(prev => ({ ...prev, [name]: value }));
+    console.log(`Field ${name} updated:`, value); // Debug log
   };
 
   const handleFileChange = (file) => {
     setFormData(prev => ({ ...prev, profileImage: file }));
+  };
+
+  const handleLocationChange = (value) => {
+  console.log('Location selected:', value);
+  setFormData(prev => ({
+    ...prev,
+    business_address: value
+  }));
   };
 
   const handleSubmit = async (e) => {
@@ -78,23 +106,20 @@ const AuthModal = ({
     try {
       // Handle migration case
       if (currentUser && currentUser.role === 'user' && activeTab === 'professional') {
-        // Step 1 validation
+        const validationErrors = validateProfessionalData(formData, step);
+        if (validationErrors.length > 0) {
+          setError(validationErrors.join('. '));
+          return;
+        }
+  
+        // Step 1 progression
         if (step === 1) {
-          if (!formData.name || !formData.phone) {
-            setError('Please fill in all required fields');
-            return;
-          }
           setStep(2);
           return;
         }
   
         // Step 2 validation and submission
         if (step === 2) {
-          if (!formData.profession || !formData.bio) {
-            setError('Please fill in all required fields');
-            return;
-          }
-  
           // Upload image if provided
           let imageUrl = null;
           if (formData.profileImage) {
@@ -107,8 +132,18 @@ const AuthModal = ({
             phone: formData.phone,
             profession: formData.profession,
             bio: formData.bio,
-            profile_image: imageUrl
+            profile_image: imageUrl,
+            business_address: formData.business_address,
+            business_email: formData.email, // Add this
+            experience_years: formData.experience_years ? parseInt(formData.experience_years) : null,
+            terms_accepted: formData.terms_accepted,
+            terms_accepted_at: formData.terms_accepted ? new Date().toISOString() : null // Add this
           };
+          console.log('Migration Data:', {
+            formData,
+            professionalData,
+            currentUser
+          });
   
           // Call migration instead of register
           const user = await migrateUserToProfessional(currentUser.id, professionalData);
@@ -129,6 +164,10 @@ const AuthModal = ({
   
       // Handle regular login
       if (view === 'login') {
+        if (!formData.email || !formData.password) {
+          setError('Please enter both email and password');
+          return;
+        }
         const user = await login(formData.email, formData.password);
         if (user) {
           onSuccessfulAuth?.();
@@ -140,52 +179,64 @@ const AuthModal = ({
   
       // Handle regular registration
       if (view === 'register') {
-        // For professional registration step 1
-        if (activeTab === 'professional' && step === 1) {
-          if (!formData.email || !formData.password || !formData.name) {
-            setError('Please fill in all required fields');
-            return;
-          }
-          setStep(2);
-          return;
-        }
-  
-        // For professional registration step 2
-        if (activeTab === 'professional' && step === 2) {
-          if (!formData.profession || !formData.bio) {
-            setError('Please fill in all required fields');
+        // For professional registration
+        if (activeTab === 'professional') {
+          const validationErrors = validateProfessionalData(formData, step);
+          if (validationErrors.length > 0) {
+            setError(validationErrors.join('. '));
             return;
           }
   
-          let imageUrl = null;
-          if (formData.profileImage) {
-            imageUrl = await uploadImage(formData.profileImage);
+          // Step 1 progression
+          if (step === 1) {
+            setStep(2);
+            return;
           }
   
-          const userData = {
-            email: formData.email,
-            password: formData.password,
-            professional_name: formData.name,
-            phone: formData.phone,
-            profession: formData.profession,
-            bio: formData.bio,
-            profile_image: imageUrl
-          };
+          // Step 2 submission
+          if (step === 2) {
+            let imageUrl = null;
+            if (formData.profileImage) {
+              imageUrl = await uploadImage(formData.profileImage);
+            }
   
-          const user = await register(userData);
-          if (user) {
-            onSuccessfulAuth?.();
-            onClose();
-            resetForm();
+            const userData = {
+              email: formData.email,
+              password: formData.password,
+              professional_name: formData.name,
+              phone: formData.phone,
+              profession: formData.profession,
+              bio: formData.bio,
+              profile_image: imageUrl,
+              business_address: formData.business_address,
+              business_email: formData.email, // Add this
+              experience_years: formData.experience_years ? parseInt(formData.experience_years) : null,
+              terms_accepted: formData.terms_accepted,
+              terms_accepted_at: formData.terms_accepted ? new Date().toISOString() : null // Add this
+            };
+  
+            const user = await register(userData);
+            if (user) {
+              onSuccessfulAuth?.();
+              onClose();
+              resetForm();
+            }
+            return;
           }
-          return;
         }
   
         // For regular user registration
+        if (!formData.email || !formData.password || !formData.name) {
+          setError('Please fill in all required fields');
+          return;
+        }
+  
         const userData = {
           email: formData.email,
           password: formData.password,
-          name: formData.name
+          name: formData.name,
+          terms_accepted: formData.terms_accepted,
+          terms_accepted_at: formData.terms_accepted ? new Date().toISOString() : null // Add this
         };
   
         const user = await register(userData);
@@ -199,6 +250,26 @@ const AuthModal = ({
       console.error('Form submission error:', err);
       setError(err.message || 'An unexpected error occurred');
     }
+  };
+  const validateProfessionalData = (data, step) => {
+    const errors = [];
+    
+    if (step === 1) {
+      if (!data.email?.trim()) errors.push('Το email είναι υποχρεωτικό');
+      if (!data.name?.trim()) errors.push('Το όνομα είναι υποχρεωτικό');
+      if (!data.phone?.trim()) errors.push('Το τηλέφωνο είναι υποχρεωτικό');
+    }
+    
+    if (step === 2) {
+      if (!data.profession?.trim()) errors.push('Το επάγγελμα είναι υποχρεωτικό');
+      if (!data.bio?.trim()) errors.push('Η περιγραφή είναι υποχρεωτική');
+      if (!data.profileImage) errors.push('Η φωτογραφία προφίλ είναι υποχρεωτική');
+      if (!data.business_address?.trim()) errors.push('Η διεύθυνση είναι υποχρεωτική');
+      if (!data.experience_years && data.experience_years !== 0) errors.push('Τα χρόνια εμπειρίας είναι υποχρεωτικά');
+      if (!data.terms_accepted) errors.push('Πρέπει να αποδεχτείτε τους όρους χρήσης');
+    }
+    
+    return errors;
   };
 
   // Ensure error is a string
@@ -277,6 +348,7 @@ const AuthModal = ({
                     handleInputChange={handleInputChange}
                     handleSubmit={handleSubmit}
                     handleFileChange={handleFileChange}
+                    handleLocationChange={handleLocationChange}
                     error={errorMessage}
                     isLoading={isLoading}
                     isUploading={isUploading}
@@ -293,6 +365,7 @@ const AuthModal = ({
                   handleInputChange={handleInputChange}
                   handleSubmit={handleSubmit}
                   handleFileChange={handleFileChange}
+                  handleLocationChange={handleLocationChange}
                   error={errorMessage}
                   isLoading={isLoading}
                   setView={setView}

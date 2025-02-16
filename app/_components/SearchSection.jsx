@@ -121,7 +121,7 @@ const SearchSection = ({ filters, setFilters, frequentSearches }) => {
       setServiceResults([]);
     }
   };
-
+  
   const handleLocationChange = (e) => {
     const value = e.target.value;
     setFilters(prev => ({ ...prev, areaSearch: value }));
@@ -133,7 +133,6 @@ const SearchSection = ({ filters, setFilters, frequentSearches }) => {
       setLocationResults([]);
     }
   };
-
   const highlightMatch = (text, query) => {
     if (!query) return text;
     
