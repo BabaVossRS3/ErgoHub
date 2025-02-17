@@ -9,6 +9,8 @@ import Link from 'next/link';
 import SearchSection from '../_components/SearchSection';
 import AuthModal from '../_components/auth/AuthModal';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { getLocationWithParent } from './../../lib/locationUtils';
+
 
 const frequentSearches = [
   { icon: '🔧', text: 'Υδραυλικός' },
@@ -202,7 +204,14 @@ const ProfessionalsPage = () => {
 
         <div className="flex items-center space-x-2 text-gray-600">
           <MapPin className="w-4 h-4 flex-shrink-0" />
-          <span className="truncate">{pro.location}</span>
+          <span className="truncate">
+            {(() => {
+              const locationInfo = getLocationWithParent(pro.location);
+              return locationInfo.region 
+                ? `${locationInfo.area}, ${locationInfo.region}`
+                : pro.location;
+            })()}
+          </span>
         </div>
 
         <div className="flex items-center space-x-2 text-green-600">
